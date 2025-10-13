@@ -1,3 +1,21 @@
 package main
 
-func main() {}
+import (
+	"net/http"
+
+	router "github.com/timac11/musthave-metrics-collector/internal/router"
+)
+
+func main() {
+	run()
+}
+
+func run() {
+	mux := http.NewServeMux()
+	router.InitRouter(mux)
+
+	err := http.ListenAndServe(":8080", mux)
+	if err != nil {
+		panic(err)
+	}
+}
