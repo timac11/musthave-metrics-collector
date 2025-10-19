@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	logger "github.com/timac11/musthave-metrics-collector/internal/logger"
 	model "github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
@@ -16,9 +17,8 @@ func UpdateMetric(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
-	res.Write([]byte("OK"))
-
 }
 
 func parseMetricParams(path string) (*model.Metrics, *model.ValidationErr) {
@@ -54,6 +54,9 @@ func parseMetricParams(path string) (*model.Metrics, *model.ValidationErr) {
 
 	var floatValue float64
 	fmt.Sscanf(metricValue, "%f", &floatValue)
+
+	logger.Log("metric value")
+	logger.Log(floatValue)
 
 	return &model.Metrics{ID: metricName, MType: metricType, Value: &floatValue}, nil
 }
