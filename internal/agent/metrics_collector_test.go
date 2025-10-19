@@ -42,8 +42,6 @@ func TestCollectMemsMetrics(t *testing.T) {
 
 func TestCollectAdditionalMetrics(t *testing.T) {
 	t.Run("should collect PollCount and RandomValue metrics", func(t *testing.T) {
-		// Seed random for predictable test
-		rand.Seed(1)
 		metrics := collectAdditionalMetrics()
 		metricsMap := buildMetricMap(metrics)
 
