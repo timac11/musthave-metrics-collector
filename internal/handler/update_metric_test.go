@@ -42,8 +42,8 @@ func TestPositiveUpdateMetricHandler(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			updateUrl := "/update/" + test.metric.MType + "/" + test.metric.ID + "/" + strconv.FormatFloat(*test.metric.Value, 'f', 2, 64)
-			request := httptest.NewRequest(http.MethodPost, updateUrl, nil)
+			updateURL := "/update/" + test.metric.MType + "/" + test.metric.ID + "/" + strconv.FormatFloat(*test.metric.Value, 'f', 2, 64)
+			request := httptest.NewRequest(http.MethodPost, updateURL, nil)
 			w := httptest.NewRecorder()
 			UpdateMetric(w, request)
 
@@ -112,6 +112,7 @@ func TestNegativeUpdateMetric(t *testing.T) {
 			UpdateMetric(w, request)
 
 			res := w.Result()
+			defer res.Body.Close()
 			assert.Equal(t, test.result.code, res.StatusCode)
 		})
 	}

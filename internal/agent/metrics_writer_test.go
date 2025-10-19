@@ -19,8 +19,8 @@ func TestWrite(t *testing.T) {
 			requests = append(requests, r.URL.String())
 			w.WriteHeader(http.StatusOK)
 		}))
-		originalBaseUrl := baseUrl
-		baseUrl = testServer.URL
+		originalBaseURL := baseURL
+		baseURL = testServer.URL
 
 		// Test data
 		value1 := 1.23
@@ -39,7 +39,7 @@ func TestWrite(t *testing.T) {
 		assert.Contains(t, requests[1], "/counter/metric2/6.789")
 
 		testServer.Close()
-		baseUrl = originalBaseUrl
+		baseURL = originalBaseURL
 	})
 }
 
@@ -53,8 +53,8 @@ func TestWriteMetric(t *testing.T) {
 			}
 		}))
 
-		originalBaseUrl := baseUrl
-		baseUrl = testServer.URL
+		originalBaseURL := baseURL
+		baseURL = testServer.URL
 
 		// Test data
 		value := 99.9
@@ -69,7 +69,7 @@ func TestWriteMetric(t *testing.T) {
 		})
 
 		testServer.Close()
-		baseUrl = originalBaseUrl
+		baseURL = originalBaseURL
 	})
 
 	t.Run("should format float values correctly in URL", func(t *testing.T) {
@@ -94,8 +94,8 @@ func TestWriteMetric(t *testing.T) {
 					w.WriteHeader(http.StatusOK)
 				}))
 
-				originalBaseUrl := baseUrl
-				baseUrl = testServer.URL
+				originalBaseURL := baseURL
+				baseURL = testServer.URL
 
 				metric := model.Metrics{
 					ID:    "test",
@@ -107,7 +107,7 @@ func TestWriteMetric(t *testing.T) {
 				assert.Equal(t, tc.expected, capturedURL)
 
 				testServer.Close()
-				baseUrl = originalBaseUrl
+				baseURL = originalBaseURL
 			})
 		}
 	})
@@ -122,8 +122,8 @@ func TestWriteMetric_EdgeCases(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		}))
 
-		originalBaseUrl := baseUrl
-		baseUrl = testServer.URL
+		originalBaseURL := baseURL
+		baseURL = testServer.URL
 
 		metric := model.Metrics{
 			ID:    "nilValueMetric",
@@ -138,6 +138,6 @@ func TestWriteMetric_EdgeCases(t *testing.T) {
 		assert.False(t, requestMade)
 
 		testServer.Close()
-		baseUrl = originalBaseUrl
+		baseURL = originalBaseURL
 	})
 }
