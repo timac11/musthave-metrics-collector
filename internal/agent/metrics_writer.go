@@ -31,7 +31,6 @@ func getClient() *resty.Client {
 	return client
 }
 
-
 func writeMetric(metric model.Metrics) {
 	value := strconv.FormatFloat(*metric.Value, 'f', -1, 64)
 	url := fmt.Sprintf("%s/update/%s/%s/%s", baseURL, metric.MType, metric.ID, value)

@@ -2,9 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"net/http"
 	"strings"
- 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, req *http.Request) {

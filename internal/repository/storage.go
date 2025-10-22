@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"maps"
 	model "github.com/timac11/musthave-metrics-collector/internal/model"
+	"maps"
 )
 
 type Repository interface {
@@ -20,7 +20,7 @@ func (ms *MemStorage) Save(value model.Metrics) {
 	ms.storage[value.ID] = value
 }
 
-func (ms *MemStorage) Get(key string) *model.Metrics {	
+func (ms *MemStorage) Get(key string) *model.Metrics {
 	val, ok := ms.storage[key]
 	if ok {
 		return &val

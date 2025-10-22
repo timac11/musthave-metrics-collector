@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"net/http"
 	"github.com/go-chi/chi/v5"
+	"net/http"
 )
 
 func (apiContainer *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req *http.Request) {

@@ -26,8 +26,8 @@ func (service *Service) Save(metric model.MetricInfo) {
 		if existedMetric != nil {
 			delta := *existedMetric.Delta + int64(*metric.Delta)
 			updatedMetric := model.Metrics{
-				ID: existedMetric.ID,
-				Hash: existedMetric.Hash,
+				ID:    existedMetric.ID,
+				Hash:  existedMetric.Hash,
 				Delta: &delta,
 				MType: existedMetric.MType,
 			}
@@ -36,8 +36,8 @@ func (service *Service) Save(metric model.MetricInfo) {
 		} else {
 			delta := int64(*metric.Delta)
 			metric := model.Metrics{
-				ID: metricId,
-				Hash: metricId,
+				ID:    metricId,
+				Hash:  metricId,
 				Delta: &delta,
 				MType: model.Counter,
 			}
@@ -46,10 +46,10 @@ func (service *Service) Save(metric model.MetricInfo) {
 		}
 	} else {
 		metric := model.Metrics{
-			ID: metricId,
-			Hash: metricId,
+			ID:    metricId,
+			Hash:  metricId,
 			Value: metric.Value,
-			MType: model.Counter,
+			MType: model.Gauge,
 		}
 
 		storage.Save(metric)
@@ -61,11 +61,11 @@ func (service *Service) Get(metricType string, metricName string) *model.Metrics
 	return storage.Get(buildMetricId(metricType, metricName))
 }
 
-func (service *Service) GetAll(metricType string, metricName string) []model.Metrics {
+func (service *Service) GetAll() []model.Metrics {
 	storage := service.storage
 	return storage.GetAll()
 }
 
 func buildMetricId(metricType string, metricName string) string {
 	return metricType + "-" + metricName
-} 
+}
