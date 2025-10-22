@@ -19,7 +19,7 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 		fmt.Fprintf(res, "%d", v)
 	case float64:
 		res.WriteHeader(http.StatusOK)
-		fmt.Fprintf(res, "%s", strconv.FormatFloat(v, 'f', 2, 64))
+		fmt.Fprintf(res, "%g", v)
 	default:
 		res.WriteHeader(http.StatusNotFound)
 	}
