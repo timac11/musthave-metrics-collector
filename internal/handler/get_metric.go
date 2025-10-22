@@ -6,11 +6,11 @@ import (
 	"net/http"
 )
 
-func (apiContainer *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req *http.Request) {
+func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req *http.Request) {
 	metricType := chi.URLParam(req, "metricType")
 	metricName := chi.URLParam(req, "metricName")
 
-	metric := apiContainer.service.Get(metricType, metricName)
+	metric := container.service.Get(metricType, metricName)
 
 	if metric != nil {
 		resp, err := json.Marshal(metric)
