@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"net/http"
+	"strconv"
 )
 
 func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req *http.Request) {
@@ -18,8 +19,8 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 		fmt.Fprintf(res, "%d", v)
 	case float64:
 		res.WriteHeader(http.StatusOK)
-		fmt.Fprintf(res, "%f", v)
+		fmt.Fprintf(res, "%s", strconv.FormatFloat(v, 'f', 2, 64))
 	default:
-		res.WriteHeader(http.StatusInternalServerError)
+		res.WriteHeader(http.StatusNotFound)
 	}
 }
