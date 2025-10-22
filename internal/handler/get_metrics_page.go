@@ -7,8 +7,8 @@ import (
 	"net/http"
 )
 
-func (apiContainer *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter, req *http.Request) {
-	metrics := apiContainer.service.GetAll()
+func (сontainer *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter, req *http.Request) {
+	metrics := сontainer.service.GetAll()
 
 	indexTpl, err := htmlTemplate.ParseFS(templates.Index, "index.gohtml")
 
