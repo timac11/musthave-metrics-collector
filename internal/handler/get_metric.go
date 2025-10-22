@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"net/http"
-	"strconv"
 )
 
 func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req *http.Request) {
