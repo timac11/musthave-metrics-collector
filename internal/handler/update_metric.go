@@ -4,24 +4,25 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	logger "github.com/timac11/musthave-metrics-collector/internal/logger"
-	model "github.com/timac11/musthave-metrics-collector/internal/model"
+ 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
-func UpdateMetric(res http.ResponseWriter, req *http.Request) {
-	_, validationRes := parseMetricParams(req.URL.Path)
+func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, req *http.Request) {
+	metric, validationRes := parseMetricParams(req)
 
 	if validationRes != nil {
 		http.Error(res, validationRes.Message, validationRes.Code)
 		return
 	}
 
+	container.service.Save(*metric)
+
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 }
 
-func parseMetricParams(path string) (*model.Metrics, *model.ValidationErr) {
+func parseMetricParams(req *http.Request) (*model.MetricInfo, *model.ValidationErr) {
+	path := req.URL.Path
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 
 	if len(parts) != 4 {
@@ -32,11 +33,6 @@ func parseMetricParams(path string) (*model.Metrics, *model.ValidationErr) {
 	metricName := parts[2]
 	metricValue := parts[3]
 
-	// TODO: add to switch case
-	if metricType != model.Gauge && metricType != model.Counter {
-		return nil, &model.ValidationErr{Message: "Invalid metric type", Code: http.StatusBadRequest}
-	}
-
 	switch metricType {
 	case model.Gauge:
 		var value float64
@@ -44,19 +40,16 @@ func parseMetricParams(path string) (*model.Metrics, *model.ValidationErr) {
 		if err != nil {
 			return nil, &model.ValidationErr{Message: "Invalid gauge value", Code: http.StatusBadRequest}
 		}
+
+		return &model.MetricInfo{Name: metricName, MType: metricType, Value: &value}, nil
 	case model.Counter:
 		var value int64
 		_, err := fmt.Sscanf(metricValue, "%d", &value)
 		if err != nil {
 			return nil, &model.ValidationErr{Message: "Invalid counter value", Code: http.StatusBadRequest}
 		}
+		return &model.MetricInfo{Name: metricName, MType: metricType, Delta: &value}, nil
 	}
 
-	var floatValue float64
-	fmt.Sscanf(metricValue, "%f", &floatValue)
-
-	logger.Log("metric value")
-	logger.Log(floatValue)
-
-	return &model.Metrics{ID: metricName, MType: metricType, Value: &floatValue}, nil
+	return nil, &model.ValidationErr{Message: "Invalid metric type", Code: http.StatusBadRequest}
 }

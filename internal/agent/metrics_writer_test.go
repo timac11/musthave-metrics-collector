@@ -78,11 +78,11 @@ func TestWriteMetric(t *testing.T) {
 			value    float64
 			expected string
 		}{
-			{"integer value", 42.0, "/gauge/test/42"},
-			{"decimal value", 42.5, "/gauge/test/42.5"},
-			{"small decimal", 0.123, "/gauge/test/0.123"},
-			{"large value", 1234567.89, "/gauge/test/1234567.89"},
-			{"negative value", -10.5, "/gauge/test/-10.5"},
+			{"integer value", 42.0, "/update/gauge/test/42"},
+			{"decimal value", 42.5, "/update/gauge/test/42.5"},
+			{"small decimal", 0.123, "/update/gauge/test/0.123"},
+			{"large value", 1234567.89, "/update/gauge/test/1234567.89"},
+			{"negative value", -10.5, "/update/gauge/test/-10.5"},
 		}
 
 		for _, tc := range testCases {
@@ -113,8 +113,8 @@ func TestWriteMetric(t *testing.T) {
 	})
 }
 
-func TestWriteMetric_EdgeCases(t *testing.T) {
-	t.Run("should handle nil value pointer", func(t *testing.T) {
+func TestWriteNilMetricEdge(t *testing.T) {
+	t.Run("should handle nil value", func(t *testing.T) {
 		// Create test server
 		requestMade := false
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +126,7 @@ func TestWriteMetric_EdgeCases(t *testing.T) {
 		baseURL = testServer.URL
 
 		metric := model.Metrics{
-			ID:    "nilValueMetric",
+			ID:    "nilValue",
 			MType: model.Gauge,
 			Value: nil,
 		}

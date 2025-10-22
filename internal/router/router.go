@@ -1,21 +1,21 @@
 package router
 
 import (
-	handler "github.com/timac11/musthave-metrics-collector/internal/handler"
-	"net/http"
+	"github.com/go-chi/chi/v5"
+	"github.com/timac11/musthave-metrics-collector/internal/handler"
+	"github.com/timac11/musthave-metrics-collector/internal/repository"
+	"github.com/timac11/musthave-metrics-collector/internal/service"
 )
 
-func InitRouter(mux *http.ServeMux) {
-	mux.HandleFunc(`/update/`, updateMetricRoute)
-	mux.HandleFunc(`/`, handler.NotFound) // default handler
-}
+func InitRouter() *chi.Mux {
+	service := service.NewService(repository.NewMemStorage())
+	handlers := handler.NewApplicationAPIContainer(*service)
 
-func updateMetricRoute(res http.ResponseWriter, req *http.Request) {
-	// valdiate request type
-	if req.Method == http.MethodPost {
-		handler.UpdateMetric(res, req)
-	} else {
-		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+	router := chi.NewRouter()
+
+	router.Post("/update/{metricType}/{metricName}/{value}", handlers.UpdateMetric)
+	router.Get("/value/{metricType}/{metricName}", handlers.GetMetric)
+	router.Get(`/`, handlers.GetMetricsPage)
+
+	return router
 }

@@ -10,11 +10,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	model "github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/repository"
+	"github.com/timac11/musthave-metrics-collector/internal/service"
 )
 
 func TestPositiveUpdateMetricHandler(t *testing.T) {
 	val := float64(1)
+
+	service := service.NewService(repository.NewMemStorage())
+	handlers := NewApplicationAPIContainer(*service)
 
 	type result struct {
 		code        int
@@ -45,7 +50,7 @@ func TestPositiveUpdateMetricHandler(t *testing.T) {
 			updateURL := "/update/" + test.metric.MType + "/" + test.metric.ID + "/" + strconv.FormatFloat(*test.metric.Value, 'f', 2, 64)
 			request := httptest.NewRequest(http.MethodPost, updateURL, nil)
 			w := httptest.NewRecorder()
-			UpdateMetric(w, request)
+			handlers.UpdateMetric(w, request)
 
 			res := w.Result()
 			assert.Equal(t, test.result.code, res.StatusCode)
@@ -62,6 +67,9 @@ func TestNegativeUpdateMetric(t *testing.T) {
 	type result struct {
 		code int
 	}
+
+	service := service.NewService(repository.NewMemStorage())
+	handlers := NewApplicationAPIContainer(*service)
 
 	tests := []struct {
 		name   string
@@ -109,7 +117,7 @@ func TestNegativeUpdateMetric(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, test.url, nil)
 			w := httptest.NewRecorder()
-			UpdateMetric(w, request)
+			handlers.UpdateMetric(w, request)
 
 			res := w.Result()
 			defer res.Body.Close()

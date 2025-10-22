@@ -11,9 +11,7 @@ func main() {
 }
 
 func run() {
-	mux := http.NewServeMux()
-	router.InitRouter(mux)
-
+	mux := router.InitRouter()
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		panic(err)

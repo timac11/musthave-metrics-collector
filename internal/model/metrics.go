@@ -17,3 +17,10 @@ type Metrics struct {
 	Value *float64 `json:"value,omitempty"`
 	Hash  string   `json:"hash,omitempty"`
 }
+
+type MetricInfo struct {
+	Name  string
+	MType string
+	Delta *int64
+	Value *float64
+}
