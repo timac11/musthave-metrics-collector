@@ -49,7 +49,7 @@ func main() {
 	metricsCollector := agent.NewMetricsCollector()
 	metricsWriter := agent.NewMetricsWriter(flags.Address)
 
-	go collectMetrics(metricsCollector, time.Duration(flags.Collectnterval) * time.Second)
-	go writeMetrics(metricsWriter, time.Duration(flags.WriteInterval) * time.Second)
+	go collectMetrics(metricsCollector, time.Duration(flags.Collectnterval)*time.Second)
+	go writeMetrics(metricsWriter, time.Duration(flags.WriteInterval)*time.Second)
 	select {}
 }

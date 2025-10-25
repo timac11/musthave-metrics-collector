@@ -6,8 +6,8 @@ import (
 
 type AgentFlags struct {
 	Address        string
-	WriteInterval int
-	Collectnterval   int
+	WriteInterval  int
+	Collectnterval int
 }
 
 func InitFlags() *AgentFlags {
