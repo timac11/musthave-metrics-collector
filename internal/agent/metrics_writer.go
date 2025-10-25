@@ -34,8 +34,9 @@ func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
 
 func NewMetricsWriter(url string) *MetricsWriter {
 	client := resty.New()
-	client.SetBaseURL(url)
+
 	client.SetScheme("http")
+	client.SetBaseURL(url)
 
 	mw := &MetricsWriter{
 		client: *client,
