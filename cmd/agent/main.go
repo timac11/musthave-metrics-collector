@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -51,7 +50,6 @@ func writeMetrics(mw *agent.MetricsWriter) {
 
 func main() {
 	flags := config.InitFlags()
-	fmt.Printf(flags.Address)
 
 	metricsCollector := agent.NewMetricsCollector()
 	metricsWriter := agent.NewMetricsWriter(flags.Address)
