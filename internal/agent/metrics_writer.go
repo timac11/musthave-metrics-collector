@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"strconv"
+	"strings"
 
 	logger "github.com/timac11/musthave-metrics-collector/internal/logger"
 	model "github.com/timac11/musthave-metrics-collector/internal/model"
@@ -34,6 +35,10 @@ func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
 
 func NewMetricsWriter(url string) *MetricsWriter {
 	client := resty.New()
+
+	if !strings.HasPrefix(url, "http") {
+		url = "http://" + url
+	}
 
 	client.SetBaseURL(url)
 

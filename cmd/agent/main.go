@@ -4,15 +4,10 @@ import (
 	"sync"
 	"time"
 
-	config "github.com/timac11/musthave-metrics-collector/cmd/agent/config"
-	agent "github.com/timac11/musthave-metrics-collector/internal/agent"
-	logger "github.com/timac11/musthave-metrics-collector/internal/logger"
-	model "github.com/timac11/musthave-metrics-collector/internal/model"
-)
-
-const (
-	ReadPeriod  = 2 * time.Second
-	WritePeriod = 10 * time.Second
+	"github.com/timac11/musthave-metrics-collector/cmd/agent/config"
+	"github.com/timac11/musthave-metrics-collector/internal/agent"
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 var (
@@ -20,9 +15,9 @@ var (
 	mu      sync.RWMutex
 )
 
-func collectMetrics(mc *agent.MetricsCollector) {
+func collectMetrics(mc *agent.MetricsCollector, period time.Duration) {
 	for {
-		time.Sleep(ReadPeriod)
+		time.Sleep(period)
 
 		logger.Debug("Start collect metrics")
 
@@ -34,9 +29,9 @@ func collectMetrics(mc *agent.MetricsCollector) {
 	}
 }
 
-func writeMetrics(mw *agent.MetricsWriter) {
+func writeMetrics(mw *agent.MetricsWriter, period time.Duration) {
 	for {
-		time.Sleep(WritePeriod)
+		time.Sleep(period)
 
 		logger.Debug("Start write metrics")
 
@@ -54,7 +49,7 @@ func main() {
 	metricsCollector := agent.NewMetricsCollector()
 	metricsWriter := agent.NewMetricsWriter(flags.Address)
 
-	go collectMetrics(metricsCollector)
-	go writeMetrics(metricsWriter)
+	go collectMetrics(metricsCollector, time.Duration(flags.Collectnterval) * time.Second)
+	go writeMetrics(metricsWriter, time.Duration(flags.WriteInterval) * time.Second)
 	select {}
 }

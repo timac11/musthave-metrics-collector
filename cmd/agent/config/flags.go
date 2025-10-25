@@ -6,16 +6,16 @@ import (
 
 type AgentFlags struct {
 	Address        string
-	ReportInterval int
-	PollInterval   int
+	WriteInterval int
+	Collectnterval   int
 }
 
 func InitFlags() *AgentFlags {
 	agentFlags := AgentFlags{}
 	pflag.StringVarP(&agentFlags.Address, "addr", "a", "http://localhost:8080", "Address host:port")
-	pflag.IntVarP(&agentFlags.ReportInterval, "reportInterval", "r", 10,
+	pflag.IntVarP(&agentFlags.WriteInterval, "reportInterval", "r", 10,
 		"Wait interval in seconds before sending metrics to server")
-	pflag.IntVarP(&agentFlags.PollInterval, "pollInterval", "p", 2,
+	pflag.IntVarP(&agentFlags.Collectnterval, "pollInterval", "p", 2,
 		"Wait interval in seconds before reading system metrics")
 
 	pflag.Parse()
