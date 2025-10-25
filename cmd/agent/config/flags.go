@@ -12,7 +12,7 @@ type AgentFlags struct {
 
 func InitFlags() *AgentFlags {
 	agentFlags := AgentFlags{}
-	pflag.StringVarP(&agentFlags.Address, "addr", "a", "localhost:8080", "Address host:port")
+	pflag.StringVarP(&agentFlags.Address, "addr", "a", "http://localhost:8080", "Address host:port")
 	pflag.IntVarP(&agentFlags.ReportInterval, "reportInterval", "r", 10,
 		"Wait interval in seconds before sending metrics to server")
 	pflag.IntVarP(&agentFlags.PollInterval, "pollInterval", "p", 2,

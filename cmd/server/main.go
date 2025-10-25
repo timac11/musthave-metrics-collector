@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	config "github.com/timac11/musthave-metrics-collector/cmd/agent/config"
+	config "github.com/timac11/musthave-metrics-collector/cmd/server/config"
 	router "github.com/timac11/musthave-metrics-collector/internal/router"
 )
 
