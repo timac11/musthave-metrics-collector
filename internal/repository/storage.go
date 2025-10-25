@@ -1,7 +1,7 @@
 package repository
 
 import (
-	model "github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"maps"
 )
 

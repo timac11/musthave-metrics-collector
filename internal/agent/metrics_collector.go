@@ -7,7 +7,9 @@ import (
 	model "github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
-func Collect() []model.Metrics {
+type MetricsCollector struct{}
+
+func (mc *MetricsCollector) Collect() []model.Metrics {
 	memsMetrics := collectMemsMetrics()
 	additionalMetrics := collectAdditionalMetrics()
 
@@ -71,4 +73,9 @@ func collectAdditionalMetrics() []model.Metrics {
 	}
 
 	return metrics
+}
+
+func NewMetricsCollector() *MetricsCollector {
+	mc := &MetricsCollector{}
+	return mc
 }

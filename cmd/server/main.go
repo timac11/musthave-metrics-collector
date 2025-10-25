@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	config "github.com/timac11/musthave-metrics-collector/cmd/agent/config"
 	router "github.com/timac11/musthave-metrics-collector/internal/router"
 )
 
@@ -11,8 +12,9 @@ func main() {
 }
 
 func run() {
+	flags := config.InitFlags()
 	mux := router.InitRouter()
-	err := http.ListenAndServe(":8080", mux)
+	err := http.ListenAndServe(flags.Address, mux)
 	if err != nil {
 		panic(err)
 	}

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
+	config "github.com/timac11/musthave-metrics-collector/cmd/agent/config"
 	agent "github.com/timac11/musthave-metrics-collector/internal/agent"
 	logger "github.com/timac11/musthave-metrics-collector/internal/logger"
 	model "github.com/timac11/musthave-metrics-collector/internal/model"
@@ -19,28 +21,28 @@ var (
 	mu      sync.RWMutex
 )
 
-func readMetrics() {
+func collectMetrics(mc *agent.MetricsCollector) {
 	for {
 		time.Sleep(ReadPeriod)
 
 		logger.Debug("Start collect metrics")
 
 		mu.Lock()
-		metrics = agent.Collect()
+		metrics = mc.Collect()
 		mu.Unlock()
 
 		logger.Debug("Complete collect metrics")
 	}
 }
 
-func writeMetrics() {
+func writeMetrics(mw *agent.MetricsWriter) {
 	for {
 		time.Sleep(WritePeriod)
 
 		logger.Debug("Start write metrics")
 
 		mu.RLock()
-		agent.Write(metrics)
+		mw.Write(metrics)
 		mu.RUnlock()
 
 		logger.Debug("Complete write metrics")
@@ -48,7 +50,13 @@ func writeMetrics() {
 }
 
 func main() {
-	go readMetrics()
-	go writeMetrics()
+	flags := config.InitFlags()
+	fmt.Printf(flags.Address)
+
+	metricsCollector := agent.NewMetricsCollector()
+	metricsWriter := agent.NewMetricsWriter(flags.Address)
+
+	go collectMetrics(metricsCollector)
+	go writeMetrics(metricsWriter)
 	select {}
 }

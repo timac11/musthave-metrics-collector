@@ -4,37 +4,25 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"strconv"
-	"sync"
 
 	logger "github.com/timac11/musthave-metrics-collector/internal/logger"
 	model "github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
-var baseURL = "http://localhost:8080"
+type MetricsWriter struct {
+	client resty.Client
+}
 
-var (
-	client *resty.Client
-	once   sync.Once
-)
-
-func Write(metrics []model.Metrics) {
+func (mw *MetricsWriter) Write(metrics []model.Metrics) {
 	for _, metric := range metrics {
-		writeMetric(metric)
+		mw.writeMetric(metric)
 	}
 }
 
-func getClient() *resty.Client {
-	once.Do(func() {
-		client = resty.New()
-		client.SetBaseURL(baseURL)
-	})
-	return client
-}
-
-func writeMetric(metric model.Metrics) {
+func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
 	value := strconv.FormatFloat(*metric.Value, 'f', -1, 64)
-	url := fmt.Sprintf("%s/update/%s/%s/%s", baseURL, metric.MType, metric.ID, value)
-	res, err := getClient().R().Post(url)
+	url := fmt.Sprintf("update/%s/%s/%s", metric.MType, metric.ID, value)
+	res, err := mw.client.R().Post(url)
 	if err != nil {
 		logger.Error("Failed to write metric:")
 		logger.Error(err.Error())
@@ -42,4 +30,15 @@ func writeMetric(metric model.Metrics) {
 	}
 
 	logger.Log(fmt.Sprintf("updated metric %s status %s", metric.ID, res.Status()))
+}
+
+func NewMetricsWriter(url string) *MetricsWriter {
+	client := resty.New()
+	client.SetBaseURL(url)
+
+	mw := &MetricsWriter{
+		client: *client,
+	}
+
+	return mw
 }

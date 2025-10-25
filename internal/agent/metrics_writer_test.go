@@ -19,8 +19,6 @@ func TestWrite(t *testing.T) {
 			requests = append(requests, r.URL.String())
 			w.WriteHeader(http.StatusOK)
 		}))
-		originalBaseURL := baseURL
-		baseURL = testServer.URL
 
 		// Test data
 		value1 := 1.23
@@ -30,8 +28,8 @@ func TestWrite(t *testing.T) {
 			{ID: "metric2", MType: model.Counter, Value: &value2},
 		}
 
-		// Call the function
-		Write(metrics)
+		mw := NewMetricsWriter(testServer.URL)
+		mw.Write(metrics)
 
 		// Verify requests were made
 		require.Len(t, requests, 2)
@@ -39,7 +37,6 @@ func TestWrite(t *testing.T) {
 		assert.Contains(t, requests[1], "/counter/metric2/6.789")
 
 		testServer.Close()
-		baseURL = originalBaseURL
 	})
 }
 
@@ -53,9 +50,6 @@ func TestWriteMetric(t *testing.T) {
 			}
 		}))
 
-		originalBaseURL := baseURL
-		baseURL = testServer.URL
-
 		// Test data
 		value := 99.9
 		metric := model.Metrics{
@@ -65,11 +59,11 @@ func TestWriteMetric(t *testing.T) {
 		}
 
 		require.NotPanics(t, func() {
-			writeMetric(metric)
+			mw := NewMetricsWriter(testServer.URL)
+			mw.writeMetric(metric)
 		})
 
 		testServer.Close()
-		baseURL = originalBaseURL
 	})
 
 	t.Run("should format float values correctly in URL", func(t *testing.T) {
@@ -94,20 +88,17 @@ func TestWriteMetric(t *testing.T) {
 					w.WriteHeader(http.StatusOK)
 				}))
 
-				originalBaseURL := baseURL
-				baseURL = testServer.URL
-
 				metric := model.Metrics{
 					ID:    "test",
 					MType: model.Gauge,
 					Value: &tc.value,
 				}
 
-				writeMetric(metric)
-				assert.Equal(t, tc.expected, capturedURL)
+				mw := NewMetricsWriter(testServer.URL)
+				mw.writeMetric(metric)
 
+				assert.Equal(t, tc.expected, capturedURL)
 				testServer.Close()
-				baseURL = originalBaseURL
 			})
 		}
 	})
@@ -122,9 +113,6 @@ func TestWriteNilMetricEdge(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		}))
 
-		originalBaseURL := baseURL
-		baseURL = testServer.URL
-
 		metric := model.Metrics{
 			ID:    "nilValue",
 			MType: model.Gauge,
@@ -132,12 +120,11 @@ func TestWriteNilMetricEdge(t *testing.T) {
 		}
 
 		require.Panics(t, func() {
-			writeMetric(metric)
+			mw := NewMetricsWriter(testServer.URL)
+			mw.writeMetric(metric)
 		})
 
 		assert.False(t, requestMade)
-
 		testServer.Close()
-		baseURL = originalBaseURL
 	})
 }

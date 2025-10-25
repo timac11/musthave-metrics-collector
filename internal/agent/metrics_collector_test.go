@@ -62,7 +62,8 @@ func TestCollectAdditionalMetrics(t *testing.T) {
 
 func TestIntegration(t *testing.T) {
 	t.Run("all metrics should have unique IDs", func(t *testing.T) {
-		metrics := Collect()
+		mc := NewMetricsCollector()
+		metrics := mc.Collect()
 
 		ids := make(map[string]bool)
 		for _, metric := range metrics {
@@ -72,7 +73,8 @@ func TestIntegration(t *testing.T) {
 	})
 
 	t.Run("metrics should have correct types", func(t *testing.T) {
-		metrics := Collect()
+		mc := NewMetricsCollector()
+		metrics := mc.Collect()
 
 		for _, metric := range metrics {
 			switch metric.ID {
