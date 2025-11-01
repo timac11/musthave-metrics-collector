@@ -43,8 +43,7 @@ func parseMetricParams(req *http.Request) (*model.MetricInfo, *model.ValidationE
 
 		return &model.MetricInfo{Name: metricName, MType: metricType, Value: &value}, nil
 	case model.Counter:
-		var value int64
-		_, err := strconv.ParseInt(metricValue, 10, 64)
+		value, err := strconv.ParseInt(metricValue, 10, 64)
 		if err != nil {
 			return nil, &model.ValidationErr{Message: "Invalid counter value", Code: http.StatusBadRequest}
 		}
