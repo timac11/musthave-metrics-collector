@@ -35,8 +35,7 @@ func parseMetricParams(req *http.Request) (*model.MetricInfo, *model.ValidationE
 
 	switch metricType {
 	case model.Gauge:
-		var value float64
-		_, err := strconv.ParseFloat(metricValue, 64)
+		value, err := strconv.ParseFloat(metricValue, 64)
 		if err != nil {
 			return nil, &model.ValidationErr{Message: "Invalid gauge value", Code: http.StatusBadRequest}
 		}
