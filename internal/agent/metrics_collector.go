@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"runtime"
 
-	model "github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 type MetricsCollector struct{}
@@ -75,7 +75,7 @@ func collectAdditionalMetrics() []model.Metrics {
 	return metrics
 }
 
-func NewMetricsCollector() *MetricsCollector {
+func newMetricsCollector() *MetricsCollector {
 	mc := &MetricsCollector{}
 	return mc
 }

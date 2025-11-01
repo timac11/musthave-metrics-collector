@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	logger "github.com/timac11/musthave-metrics-collector/internal/logger"
-	model "github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 type MetricsWriter struct {
@@ -33,7 +33,7 @@ func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
 	logger.Log(fmt.Sprintf("updated metric %s status %s", metric.ID, res.Status()))
 }
 
-func NewMetricsWriter(url string) *MetricsWriter {
+func newMetricsWriter(url string) *MetricsWriter {
 	client := resty.New()
 
 	if !strings.HasPrefix(url, "http") {

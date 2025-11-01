@@ -1,55 +1,15 @@
 package main
 
 import (
-	"sync"
-	"time"
-
-	"github.com/timac11/musthave-metrics-collector/cmd/agent/config"
 	"github.com/timac11/musthave-metrics-collector/internal/agent"
+	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
-	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
-
-var (
-	metrics []model.Metrics
-	mu      sync.RWMutex
-)
-
-func collectMetrics(mc *agent.MetricsCollector, period time.Duration) {
-	for {
-		time.Sleep(period)
-
-		logger.Debug("Start collect metrics")
-
-		mu.Lock()
-		metrics = mc.Collect()
-		mu.Unlock()
-
-		logger.Debug("Complete collect metrics")
-	}
-}
-
-func writeMetrics(mw *agent.MetricsWriter, period time.Duration) {
-	for {
-		time.Sleep(period)
-
-		logger.Debug("Start write metrics")
-
-		mu.RLock()
-		mw.Write(metrics)
-		mu.RUnlock()
-
-		logger.Debug("Complete write metrics")
-	}
-}
 
 func main() {
-	flags := config.InitFlags()
-
-	metricsCollector := agent.NewMetricsCollector()
-	metricsWriter := agent.NewMetricsWriter(flags.Address)
-
-	go collectMetrics(metricsCollector, time.Duration(flags.Collectnterval)*time.Second)
-	go writeMetrics(metricsWriter, time.Duration(flags.WriteInterval)*time.Second)
-	select {}
+	flags := config.InitAgentFlags()
+	logger.Log(flags.Collectnterval)
+	logger.Log(flags.WriteInterval)
+	metricsAgent := agent.NewMetricsAgent(flags)
+	metricsAgent.Start()
 }

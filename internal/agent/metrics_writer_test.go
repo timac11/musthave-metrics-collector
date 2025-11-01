@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	model "github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 func TestWrite(t *testing.T) {
@@ -28,7 +28,7 @@ func TestWrite(t *testing.T) {
 			{ID: "metric2", MType: model.Counter, Value: &value2},
 		}
 
-		mw := NewMetricsWriter(testServer.URL)
+		mw := newMetricsWriter(testServer.URL)
 		mw.Write(metrics)
 
 		// Verify requests were made
@@ -59,7 +59,7 @@ func TestWriteMetric(t *testing.T) {
 		}
 
 		require.NotPanics(t, func() {
-			mw := NewMetricsWriter(testServer.URL)
+			mw := newMetricsWriter(testServer.URL)
 			mw.writeMetric(metric)
 		})
 
@@ -94,7 +94,7 @@ func TestWriteMetric(t *testing.T) {
 					Value: &tc.value,
 				}
 
-				mw := NewMetricsWriter(testServer.URL)
+				mw := newMetricsWriter(testServer.URL)
 				mw.writeMetric(metric)
 
 				assert.Equal(t, tc.expected, capturedURL)
@@ -120,7 +120,7 @@ func TestWriteNilMetricEdge(t *testing.T) {
 		}
 
 		require.Panics(t, func() {
-			mw := NewMetricsWriter(testServer.URL)
+			mw := newMetricsWriter(testServer.URL)
 			mw.writeMetric(metric)
 		})
 

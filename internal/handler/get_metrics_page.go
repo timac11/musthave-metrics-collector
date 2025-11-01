@@ -1,27 +1,24 @@
 package handler
 
 import (
-	"github.com/timac11/musthave-metrics-collector/internal/handler/templates"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
-	htmlTemplate "html/template"
 	"net/http"
 )
 
 func (container *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter, req *http.Request) {
 	metrics := container.service.GetAll()
+	indexTpl := container.templatesMap["index"]
 
-	indexTpl, err := htmlTemplate.ParseFS(templates.Index, "index.gohtml")
-
-	logger.Debug("Template was parsed")
-
-	if err != nil {
+	if indexTpl == nil {
 		http.Error(res, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	err = indexTpl.Execute(res, metrics)
+	err := indexTpl.Execute(res, metrics)
 	if err != nil {
 		http.Error(res, "Internal server error", http.StatusInternalServerError)
+		logger.Error("Internal server error")
+		logger.Error(err.Error())
 		return
 	}
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	model "github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 var memsMetrics = []string{
@@ -62,7 +62,7 @@ func TestCollectAdditionalMetrics(t *testing.T) {
 
 func TestIntegration(t *testing.T) {
 	t.Run("all metrics should have unique IDs", func(t *testing.T) {
-		mc := NewMetricsCollector()
+		mc := newMetricsCollector()
 		metrics := mc.Collect()
 
 		ids := make(map[string]bool)
@@ -73,7 +73,7 @@ func TestIntegration(t *testing.T) {
 	})
 
 	t.Run("metrics should have correct types", func(t *testing.T) {
-		mc := NewMetricsCollector()
+		mc := newMetricsCollector()
 		metrics := mc.Collect()
 
 		for _, metric := range metrics {

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"maps"
+	"sync"
 )
 
 type Repository interface {
@@ -13,14 +13,19 @@ type Repository interface {
 
 type MemStorage struct {
 	storage map[string]model.Metrics
+	mu      *sync.Mutex
 }
 
 func (ms *MemStorage) Save(value model.Metrics) {
 	// save if does not exist and rewrite if exist
+	ms.mu.Lock()
+	defer ms.mu.Unlock()
 	ms.storage[value.ID] = value
 }
 
 func (ms *MemStorage) Get(key string) *model.Metrics {
+	ms.mu.Lock()
+	defer ms.mu.Unlock()
 	val, ok := ms.storage[key]
 	if ok {
 		return &val
@@ -29,10 +34,11 @@ func (ms *MemStorage) Get(key string) *model.Metrics {
 }
 
 func (ms *MemStorage) GetAll() []model.Metrics {
-	metricsMap := maps.Clone(ms.storage)
-	metrics := make([]model.Metrics, 0, len(metricsMap))
+	ms.mu.Lock()
+	defer ms.mu.Unlock()
+	metrics := make([]model.Metrics, 0, len(ms.storage))
 
-	for _, v := range metricsMap {
+	for _, v := range ms.storage {
 		metrics = append(metrics, v)
 	}
 
@@ -40,8 +46,10 @@ func (ms *MemStorage) GetAll() []model.Metrics {
 }
 
 func NewMemStorage() *MemStorage {
+	mu := sync.Mutex{}
 	ms := &MemStorage{
 		storage: make(map[string]model.Metrics),
+		mu:      &mu,
 	}
 
 	return ms

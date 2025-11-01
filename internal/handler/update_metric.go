@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -36,7 +36,7 @@ func parseMetricParams(req *http.Request) (*model.MetricInfo, *model.ValidationE
 	switch metricType {
 	case model.Gauge:
 		var value float64
-		_, err := fmt.Sscanf(metricValue, "%f", &value)
+		_, err := strconv.ParseFloat(metricValue, 64)
 		if err != nil {
 			return nil, &model.ValidationErr{Message: "Invalid gauge value", Code: http.StatusBadRequest}
 		}
@@ -44,7 +44,7 @@ func parseMetricParams(req *http.Request) (*model.MetricInfo, *model.ValidationE
 		return &model.MetricInfo{Name: metricName, MType: metricType, Value: &value}, nil
 	case model.Counter:
 		var value int64
-		_, err := fmt.Sscanf(metricValue, "%d", &value)
+		_, err := strconv.ParseInt(metricValue, 10, 64)
 		if err != nil {
 			return nil, &model.ValidationErr{Message: "Invalid counter value", Code: http.StatusBadRequest}
 		}
