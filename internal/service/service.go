@@ -1,17 +1,22 @@
 package service
 
 import (
-	model "github.com/timac11/musthave-metrics-collector/internal/model"
-	repository "github.com/timac11/musthave-metrics-collector/internal/repository"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
-type Service struct {
-	storage repository.Repository
+type Repository interface {
+	Save(value model.Metrics)
+	Get(key string) *model.Metrics
+	GetAll() []model.Metrics
 }
 
-func NewService(s repository.Repository) *Service {
+type Service struct {
+	storage Repository
+}
+
+func NewService(storage Repository) *Service {
 	service := &Service{
-		storage: s,
+		storage: storage,
 	}
 
 	return service

@@ -19,7 +19,8 @@ var memsMetrics = []string{
 
 func TestCollectMemsMetrics(t *testing.T) {
 	t.Run("should collect all runtime memory metrics", func(t *testing.T) {
-		metrics := collectMemsMetrics()
+		mc := newMetricsCollector()
+		metrics := mc.collectMemsMetrics()
 
 		metricsMap := buildMetricMap(metrics)
 
@@ -41,7 +42,8 @@ func TestCollectMemsMetrics(t *testing.T) {
 
 func TestCollectAdditionalMetrics(t *testing.T) {
 	t.Run("should collect PollCount and RandomValue metrics", func(t *testing.T) {
-		metrics := collectAdditionalMetrics()
+		mc := newMetricsCollector()
+		metrics := mc.collectAdditionalMetrics()
 		metricsMap := buildMetricMap(metrics)
 
 		require.Len(t, metrics, 2, "Should return only 2 random metrics")
@@ -55,7 +57,7 @@ func TestCollectAdditionalMetrics(t *testing.T) {
 		// Test RandomValue metric
 		randomValueMetric := metricsMap["RandomValue"]
 		require.NotNil(t, randomValueMetric, "RandomValue metric should not be null")
-		assert.Equal(t, model.Counter, randomValueMetric.MType)
+		assert.Equal(t, model.Gauge, randomValueMetric.MType)
 		assert.NotNil(t, randomValueMetric.Value)
 	})
 }
@@ -78,7 +80,7 @@ func TestIntegration(t *testing.T) {
 
 		for _, metric := range metrics {
 			switch metric.ID {
-			case "PollCount", "RandomValue":
+			case "PollCount":
 				assert.Equal(t, model.Counter, metric.MType,
 					"Metric %s should be Counter type", metric.ID)
 			default:

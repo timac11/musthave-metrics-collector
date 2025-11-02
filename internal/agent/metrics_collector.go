@@ -7,16 +7,18 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
-type MetricsCollector struct{}
+type MetricsCollector struct {
+	pollCount int64
+}
 
 func (mc *MetricsCollector) Collect() []model.Metrics {
-	memsMetrics := collectMemsMetrics()
-	additionalMetrics := collectAdditionalMetrics()
+	memsMetrics := mc.collectMemsMetrics()
+	additionalMetrics := mc.collectAdditionalMetrics()
 
 	return append(memsMetrics, additionalMetrics...)
 }
 
-func collectMemsMetrics() []model.Metrics {
+func (mc *MetricsCollector) collectMemsMetrics() []model.Metrics {
 	var stats runtime.MemStats
 	runtime.ReadMemStats(&stats)
 	metricsMap := make(map[string]float64)
@@ -58,24 +60,20 @@ func collectMemsMetrics() []model.Metrics {
 	return metrics
 }
 
-func collectAdditionalMetrics() []model.Metrics {
-	metricsMap := make(map[string]float64)
-
-	metricsMap["PollCount"] = 1
-	metricsMap["RandomValue"] = rand.Float64()
-
-	var pollCount = float64(1)
-	var randomValue = rand.Float64()
+func (mc *MetricsCollector) collectAdditionalMetrics() []model.Metrics {
+	mc.pollCount += 1
+	pollCount := float64(mc.pollCount)
+	randomValue := rand.Float64()
 
 	metrics := []model.Metrics{
 		{ID: "PollCount", MType: model.Counter, Value: &pollCount},
-		{ID: "RandomValue", MType: model.Counter, Value: &randomValue},
+		{ID: "RandomValue", MType: model.Gauge, Value: &randomValue},
 	}
 
 	return metrics
 }
 
 func newMetricsCollector() *MetricsCollector {
-	mc := &MetricsCollector{}
+	mc := &MetricsCollector{pollCount: 0}
 	return mc
 }

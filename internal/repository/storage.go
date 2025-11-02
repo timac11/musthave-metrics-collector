@@ -5,12 +5,6 @@ import (
 	"sync"
 )
 
-type Repository interface {
-	Save(value model.Metrics)
-	Get(key string) *model.Metrics
-	GetAll() []model.Metrics
-}
-
 type MemStorage struct {
 	storage map[string]model.Metrics
 	mu      *sync.Mutex
