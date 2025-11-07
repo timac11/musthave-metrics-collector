@@ -13,9 +13,9 @@ func main() {
 }
 
 func run() {
-	flags := config.InitServerFlags()
+	conf := config.InitServerConfig()
 	mux := router.InitRouter()
-	err := http.ListenAndServe(flags.Address, mux)
+	err := http.ListenAndServe(conf.Address, mux)
 	if err != nil {
 		log.Fatal(err)
 	}
