@@ -18,6 +18,10 @@ func (mc *MetricsCollector) Collect() []model.Metrics {
 	return append(memsMetrics, additionalMetrics...)
 }
 
+func (mc *MetricsCollector) Reset() {
+	mc.pollCount = 0
+}
+
 func (mc *MetricsCollector) collectMemsMetrics() []model.Metrics {
 	var stats runtime.MemStats
 	runtime.ReadMemStats(&stats)

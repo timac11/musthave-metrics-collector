@@ -54,6 +54,7 @@ func (agent *MetricsAgent) writeMetrics() {
 		agent.mu.Lock()
 		metrics := agent.metrics
 		agent.writer.Write(metrics)
+		agent.collector.Reset()
 		agent.mu.Unlock()
 
 		logger.Debug("Complete write metrics")
