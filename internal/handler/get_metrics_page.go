@@ -17,8 +17,7 @@ func (container *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter
 	err := indexTpl.Execute(res, metrics)
 	if err != nil {
 		http.Error(res, "Internal server error", http.StatusInternalServerError)
-		logger.Error("Internal server error")
-		logger.Error(err.Error())
+		logger.Error("Internal server error", err.Error())
 		return
 	}
 

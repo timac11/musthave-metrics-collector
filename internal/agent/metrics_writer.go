@@ -25,12 +25,11 @@ func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
 	url := fmt.Sprintf("update/%s/%s/%s", metric.MType, metric.ID, value)
 	res, err := mw.client.R().Post(url)
 	if err != nil {
-		logger.Error("Failed to write metric:")
-		logger.Error(err.Error())
+		logger.Error("Failed to write metric", err.Error())
 		return
 	}
 
-	logger.Log(fmt.Sprintf("updated metric %s status %s", metric.ID, res.Status()))
+	logger.Info("Update metric", "metric ID", metric.ID, "status", res.Status())
 }
 
 func newMetricsWriter(url string) *MetricsWriter {

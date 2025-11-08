@@ -13,7 +13,7 @@ type MetricsAgent struct {
 	collector *MetricsCollector
 	mu        *sync.Mutex
 	metrics   []model.Metrics
-	config     *config.AgentConfig
+	config    *config.AgentConfig
 }
 
 func (agent *MetricsAgent) Start() {
