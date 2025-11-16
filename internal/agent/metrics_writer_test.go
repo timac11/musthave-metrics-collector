@@ -1,13 +1,13 @@
 package agent
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"testing"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 func TestWrite(t *testing.T) {

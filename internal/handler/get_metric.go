@@ -28,17 +28,18 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 }
 
 func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWriter, req *http.Request) {
-	var metric model.MetricInfo
+	var metric model.Metrics
 	res.Header().Set("Content-Type", "application/json")
 
 	err := json.NewDecoder(req.Body).Decode(&metric)
 	if err != nil {
+		logger.Error("Failed to decode body")
 		logger.Error(err.Error())
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	metricValue := container.service.Get(metric.MType, metric.Name)
+	metricValue := container.service.Get(metric.MType, metric.ID)
 
 	switch v := metricValue.(type) {
 	case int64:
@@ -46,6 +47,7 @@ func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWri
 	case float64:
 		metric.Value = &v
 	default:
+		logger.Info("Metric not found")
 		res.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -55,6 +57,7 @@ func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWri
 		res.Write(valueMetric)
 		return
 	}
+	logger.Error("Failed to write body")
 	logger.Error(err.Error())
 	res.WriteHeader(http.StatusInternalServerError)
 }
