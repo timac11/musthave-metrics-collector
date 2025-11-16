@@ -47,6 +47,14 @@ func parseMetricParamsV2(req *http.Request) (*model.Metrics, *model.ValidationEr
 		return nil, &model.ValidationErr{Message: "Invalid metric type", Code: http.StatusBadRequest}
 	}
 
+	if metric.MType == model.Counter && metric.Delta == nil {
+		return nil, &model.ValidationErr{Message: "Invalid counter value", Code: http.StatusBadRequest}
+	}
+
+	if metric.MType == model.Gauge && metric.Value == nil {
+		return nil, &model.ValidationErr{Message: "Invalid gauge value", Code: http.StatusBadRequest}
+	}
+
 	return &metric, nil
 }
 
