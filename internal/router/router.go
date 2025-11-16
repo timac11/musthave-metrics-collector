@@ -24,12 +24,12 @@ func InitRouter() *chi.Mux {
 	// setup routes
 	router.Route("/update", func(r chi.Router) {
 		r.Post("/", handlers.UpdateMetricV2)
-		router.Post("/{metricType}/{metricName}/{value}", handlers.UpdateMetric)
+		r.Post("/{metricType}/{metricName}/{value}", handlers.UpdateMetric)
 	})
 
 	router.Route("/value", func(r chi.Router) {
 		r.Post("/", handlers.GetFullMetricInfo)
-		router.Get("/{metricType}/{metricName}", handlers.GetMetric)
+		r.Get("/{metricType}/{metricName}", handlers.GetMetric)
 	})
 
 	router.Get(`/`, handlers.GetMetricsPage)
