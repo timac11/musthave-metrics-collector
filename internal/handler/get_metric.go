@@ -15,6 +15,11 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 
 	metric := container.service.Get(metricType, metricName)
 
+	if metric == nil {
+		res.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	switch metric.MType {
 	case model.Counter:
 		res.WriteHeader(http.StatusOK)
@@ -48,7 +53,7 @@ func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWri
 	}
 
 	returnBody, err := json.Marshal(metricValue)
-	
+
 	if err == nil {
 		res.WriteHeader(http.StatusOK)
 		res.Write(returnBody)
