@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"net/http"
 	"strconv"
@@ -19,6 +20,35 @@ func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, 
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
+}
+
+func (container *ApplicationAPIContainer) UpdateMetricV2(res http.ResponseWriter, req *http.Request) {
+	metric, validationRes := parseMetricParamsV2(req)
+
+	if validationRes != nil {
+		http.Error(res, validationRes.Message, validationRes.Code)
+		return
+	}
+
+	container.service.Save(*metric)
+
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusOK)
+}
+
+func parseMetricParamsV2(req *http.Request) (*model.MetricInfo, *model.ValidationErr) {
+	var metric model.MetricInfo
+
+	err := json.NewDecoder(req.Body).Decode(&metric)
+	if err != nil {
+		return nil, &model.ValidationErr{Message: "Invalid metric", Code: http.StatusBadRequest}
+	}
+
+	if metric.MType != model.Counter && metric.MType != model.Gauge {
+		return nil, &model.ValidationErr{Message: "Invalid metric type", Code: http.StatusBadRequest}
+	}
+
+	return &metric, nil
 }
 
 func parseMetricParams(req *http.Request) (*model.MetricInfo, *model.ValidationErr) {

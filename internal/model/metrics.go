@@ -19,8 +19,8 @@ type Metrics struct {
 }
 
 type MetricInfo struct {
-	Name  string
-	MType string
-	Delta *int64
-	Value *float64
+	Name  string   `json:"id"`
+	MType string   `json:"type"`
+	Delta *int64   `json:"delta,omitempty"`
+	Value *float64 `json:"value,omitempty"`
 }

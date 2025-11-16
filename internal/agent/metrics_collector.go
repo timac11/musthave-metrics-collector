@@ -66,11 +66,11 @@ func (mc *MetricsCollector) collectMemsMetrics() []model.Metrics {
 
 func (mc *MetricsCollector) collectAdditionalMetrics() []model.Metrics {
 	mc.pollCount += 1
-	pollCount := float64(mc.pollCount)
+	pollCount := int64(mc.pollCount)
 	randomValue := rand.Float64()
 
 	metrics := []model.Metrics{
-		{ID: "PollCount", MType: model.Counter, Value: &pollCount},
+		{ID: "PollCount", MType: model.Counter, Delta: &pollCount},
 		{ID: "RandomValue", MType: model.Gauge, Value: &randomValue},
 	}
 

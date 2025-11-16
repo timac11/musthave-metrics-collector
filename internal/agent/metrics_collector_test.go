@@ -51,8 +51,8 @@ func TestCollectAdditionalMetrics(t *testing.T) {
 		pollCountMetric := metricsMap["PollCount"]
 		require.NotNil(t, pollCountMetric, "PollCount metric should not be null")
 		assert.Equal(t, model.Counter, pollCountMetric.MType)
-		assert.NotNil(t, pollCountMetric.Value)
-		assert.Equal(t, float64(1), *pollCountMetric.Value)
+		assert.NotNil(t, pollCountMetric.Delta)
+		assert.Equal(t, int64(1), *pollCountMetric.Delta)
 
 		// Test RandomValue metric
 		randomValueMetric := metricsMap["RandomValue"]
