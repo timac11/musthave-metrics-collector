@@ -39,7 +39,7 @@ func parseMetricParamsV2(req *http.Request) (*model.Metrics, *model.ValidationEr
 	var metric model.Metrics
 
 	err := json.NewDecoder(req.Body).Decode(&metric)
-	
+
 	if err != nil {
 		return nil, &model.ValidationErr{Message: "Invalid metric", Code: http.StatusBadRequest}
 	}
