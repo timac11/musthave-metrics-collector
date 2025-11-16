@@ -84,7 +84,7 @@ func TestWriteMetric(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				// Create test server
 				var capturedURL string
-				var metric model.MetricInfo
+				var metric model.Metrics
 				testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					capturedURL = r.URL.String()
 					json.NewDecoder(r.Body).Decode(&metric)
@@ -101,7 +101,7 @@ func TestWriteMetric(t *testing.T) {
 				mw.writeMetric(sendedMetric)
 
 				assert.Equal(t, tc.expected, capturedURL)
-				assert.Equal(t, sendedMetric.ID, metric.Name)
+				assert.Equal(t, sendedMetric.ID, metric.ID)
 				assert.Equal(t, sendedMetric.Value, metric.Value)
 				assert.Equal(t, sendedMetric.MType, metric.MType)
 

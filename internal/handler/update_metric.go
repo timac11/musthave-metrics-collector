@@ -31,13 +31,12 @@ func (container *ApplicationAPIContainer) UpdateMetricV2(res http.ResponseWriter
 	}
 
 	container.service.Save(*metric)
-
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 }
 
-func parseMetricParamsV2(req *http.Request) (*model.MetricInfo, *model.ValidationErr) {
-	var metric model.MetricInfo
+func parseMetricParamsV2(req *http.Request) (*model.Metrics, *model.ValidationErr) {
+	var metric model.Metrics
 
 	err := json.NewDecoder(req.Body).Decode(&metric)
 	if err != nil {
@@ -51,7 +50,7 @@ func parseMetricParamsV2(req *http.Request) (*model.MetricInfo, *model.Validatio
 	return &metric, nil
 }
 
-func parseMetricParams(req *http.Request) (*model.MetricInfo, *model.ValidationErr) {
+func parseMetricParams(req *http.Request) (*model.Metrics, *model.ValidationErr) {
 	path := req.URL.Path
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 
@@ -70,13 +69,13 @@ func parseMetricParams(req *http.Request) (*model.MetricInfo, *model.ValidationE
 			return nil, &model.ValidationErr{Message: "Invalid gauge value", Code: http.StatusBadRequest}
 		}
 
-		return &model.MetricInfo{Name: metricName, MType: metricType, Value: &value}, nil
+		return &model.Metrics{ID: metricName, MType: metricType, Value: &value}, nil
 	case model.Counter:
 		value, err := strconv.ParseInt(metricValue, 10, 64)
 		if err != nil {
 			return nil, &model.ValidationErr{Message: "Invalid counter value", Code: http.StatusBadRequest}
 		}
-		return &model.MetricInfo{Name: metricName, MType: metricType, Delta: &value}, nil
+		return &model.Metrics{ID: metricName, MType: metricType, Delta: &value}, nil
 	}
 
 	return nil, &model.ValidationErr{Message: "Invalid metric type", Code: http.StatusBadRequest}

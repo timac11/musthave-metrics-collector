@@ -14,13 +14,13 @@ func (ms *MemStorage) Save(value model.Metrics) {
 	// save if does not exist and rewrite if exist
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
-	ms.storage[value.ID] = value
+	ms.storage[value.ID+"-"+value.MType] = value
 }
 
-func (ms *MemStorage) Get(key string) *model.Metrics {
+func (ms *MemStorage) Get(id string, mType string) *model.Metrics {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
-	val, ok := ms.storage[key]
+	val, ok := ms.storage[id+"-"+mType]
 	if ok {
 		return &val
 	}

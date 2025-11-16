@@ -6,7 +6,7 @@ import (
 
 type Repository interface {
 	Save(value model.Metrics)
-	Get(key string) *model.Metrics
+	Get(id string, mType string) *model.Metrics
 	GetAll() []model.Metrics
 }
 
@@ -22,56 +22,30 @@ func NewService(storage Repository) *Service {
 	return service
 }
 
-func (service *Service) Save(metric model.MetricInfo) {
+func (service *Service) Save(metric model.Metrics) {
 	storage := service.storage
-	metricID := buildMetricID(metric.MType, metric.Name)
-	existedMetric := storage.Get(metricID)
+	existedMetric := storage.Get(metric.ID, metric.MType)
 
 	if metric.MType == model.Counter {
 		if existedMetric != nil {
 			delta := *existedMetric.Delta + int64(*metric.Delta)
-			updatedMetric := model.Metrics{
-				ID:    existedMetric.ID,
-				Hash:  existedMetric.Hash,
-				Delta: &delta,
-				MType: existedMetric.MType,
-			}
-
-			storage.Save(updatedMetric)
+			existedMetric.Delta = &delta
+			storage.Save(*existedMetric)
 		} else {
-			delta := int64(*metric.Delta)
-			metric := model.Metrics{
-				ID:    metricID,
-				Hash:  metricID,
-				Delta: &delta,
-				MType: model.Counter,
-			}
-
 			storage.Save(metric)
 		}
 	} else {
-		metric := model.Metrics{
-			ID:    metricID,
-			Hash:  metricID,
-			Value: metric.Value,
-			MType: model.Gauge,
-		}
-
 		storage.Save(metric)
 	}
 }
 
-func (service *Service) Get(metricType string, metricName string) *model.Metrics {
+func (service *Service) Get(id string, mType string) *model.Metrics {
 	storage := service.storage
-	metric := storage.Get(buildMetricID(metricType, metricName))
+	metric := storage.Get(id, mType)
 	return metric
 }
 
 func (service *Service) GetAll() []model.Metrics {
 	storage := service.storage
 	return storage.GetAll()
-}
-
-func buildMetricID(metricType string, metricName string) string {
-	return metricType + "-" + metricName
 }
