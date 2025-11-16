@@ -61,18 +61,10 @@ func (service *Service) Save(metric model.MetricInfo) {
 	}
 }
 
-func (service *Service) Get(metricType string, metricName string) interface{} {
+func (service *Service) Get(metricType string, metricName string) *model.Metrics {
 	storage := service.storage
 	metric := storage.Get(buildMetricID(metricType, metricName))
-
-	if metric == nil {
-		return nil
-	}
-
-	if metric.MType == model.Counter {
-		return *metric.Delta
-	}
-	return *metric.Value
+	return metric
 }
 
 func (service *Service) GetAll() []model.Metrics {
