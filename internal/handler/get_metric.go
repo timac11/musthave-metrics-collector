@@ -44,6 +44,8 @@ func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWri
 		return
 	}
 
+	logger.Info("Get metric params", metric.ID, metric.MType)
+
 	metricValue := container.service.Get(metric.ID, metric.MType)
 
 	if metricValue == nil {
