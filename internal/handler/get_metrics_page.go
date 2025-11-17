@@ -20,6 +20,6 @@ func (container *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter
 		logger.Error("Internal server error", err.Error())
 		return
 	}
-
+	res.Header().Set("Content-Type", "text/html")
 	logger.Debug("Template was executed")
 }
