@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"net/http"
 	"strconv"
 	"strings"
@@ -34,8 +34,17 @@ func (container *ApplicationAPIContainer) UpdateMetricV2(res http.ResponseWriter
 	logger.Info("Update metric params", metric.ID, metric.MType, metric.Value)
 
 	container.service.Save(*metric)
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
+
+	returnBody, err := json.Marshal(metric)
+
+	if err == nil {
+		res.Header().Set("Content-Type", "application/json")
+		res.WriteHeader(http.StatusOK)
+		res.Write(returnBody)
+		return
+	}
+
+	res.WriteHeader(http.StatusInternalServerError)
 }
 
 func parseMetricParamsV2(req *http.Request) (*model.Metrics, *model.ValidationErr) {
