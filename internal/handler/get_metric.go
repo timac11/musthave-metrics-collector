@@ -34,7 +34,6 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 
 func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWriter, req *http.Request) {
 	var metric model.Metrics
-	res.Header().Set("Content-Type", "application/json")
 
 	err := json.NewDecoder(req.Body).Decode(&metric)
 	if err != nil {
@@ -57,6 +56,7 @@ func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWri
 	returnBody, err := json.Marshal(metricValue)
 
 	if err == nil {
+		res.Header().Set("Content-Type", "application/json")
 		res.WriteHeader(http.StatusOK)
 		res.Write(returnBody)
 		return
