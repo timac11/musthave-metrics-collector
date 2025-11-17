@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/handler"
 	"github.com/timac11/musthave-metrics-collector/internal/handler/middleware"
 	"github.com/timac11/musthave-metrics-collector/internal/repository"
@@ -9,9 +10,15 @@ import (
 	"net/http"
 )
 
-func InitRouter() *chi.Mux {
-	service := service.NewService(repository.NewMemStorage())
+func InitRouter(serverConfig *config.ServerConfig) *chi.Mux {
+	memStorage := repository.NewMemStorage(serverConfig.FileStoragePath)
+	service := service.NewService(memStorage)
 	handlers := handler.NewApplicationAPIContainer(*service)
+
+	if serverConfig.Restore {
+		memStorage.Restore()
+	}
+
 	m := middleware.NewMiddleware()
 	middlewares := []func(http.Handler) http.Handler{
 		m.GzipMiddleware,

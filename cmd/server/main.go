@@ -16,7 +16,10 @@ func main() {
 func run() {
 	conf := config.InitServerConfig()
 	logger.Initialize("INFO")
-	mux := router.InitRouter()
+	mux := router.InitRouter(conf)
+
+	logger.Info("Starting server on address: ", conf.Address)
+
 	err := http.ListenAndServe(conf.Address, mux)
 	if err != nil {
 		log.Fatal(err)

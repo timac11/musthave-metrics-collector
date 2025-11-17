@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"testing"
+	"os"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +19,9 @@ import (
 func TestPositiveUpdateMetricHandler(t *testing.T) {
 	val := float64(1)
 
-	service := service.NewService(repository.NewMemStorage())
+	dbFilePath := "./tmp/db.json"
+	storage := repository.NewMemStorage(dbFilePath)
+	service := service.NewService(storage)
 	handlers := NewApplicationAPIContainer(*service)
 
 	type result struct {
@@ -61,6 +64,8 @@ func TestPositiveUpdateMetricHandler(t *testing.T) {
 			assert.Equal(t, test.result.contentType, res.Header.Get("Content-Type"))
 		})
 	}
+
+	os.Remove(dbFilePath)
 }
 
 func TestNegativeUpdateMetric(t *testing.T) {
@@ -68,7 +73,8 @@ func TestNegativeUpdateMetric(t *testing.T) {
 		code int
 	}
 
-	service := service.NewService(repository.NewMemStorage())
+	storage := repository.NewMemStorage("./db.json")
+	service := service.NewService(storage)
 	handlers := NewApplicationAPIContainer(*service)
 
 	tests := []struct {
