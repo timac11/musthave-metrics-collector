@@ -57,21 +57,13 @@ func (ms *MemStorage) GetAll() []model.Metrics {
 }
 
 func (ms *MemStorage) Restore() error {
-	logger.Info("Start restore data")
-
-	file, err := os.OpenFile(ms.backupPath, os.O_RDONLY|os.O_CREATE, 0755)
-
+	data, err := os.ReadFile(ms.backupPath)
 	if err != nil {
-		logger.Error("Failed to open backup file", err)
+		logger.Error("Failed to read backup file", err)
 		return err
 	}
-	defer file.Close()
 
-	var data []byte
-
-	file.Read(data)
-
-	memsMap := map[string]model.Metrics{}
+	var memsMap map[string]model.Metrics
 	err = json.Unmarshal(data, &memsMap)
 
 	if err != nil {
