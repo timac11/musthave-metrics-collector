@@ -14,6 +14,7 @@ func InitRouter() *chi.Mux {
 	handlers := handler.NewApplicationAPIContainer(*service)
 	m := middleware.NewMiddleware()
 	middlewares := []func(http.Handler) http.Handler{
+		m.GzipMiddleware,
 		m.RequestLoggerMiddleware,
 	}
 
