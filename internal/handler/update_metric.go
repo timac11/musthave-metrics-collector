@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"net/http"
 	"strconv"
 	"strings"
@@ -29,6 +30,8 @@ func (container *ApplicationAPIContainer) UpdateMetricV2(res http.ResponseWriter
 		http.Error(res, validationRes.Message, validationRes.Code)
 		return
 	}
+
+	logger.Info("Update metric params", metric.ID, metric.MType, metric.Value)
 
 	container.service.Save(*metric)
 	res.Header().Set("Content-Type", "application/json")
