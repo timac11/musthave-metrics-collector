@@ -7,8 +7,8 @@ import (
 
 type AgentConfig struct {
 	Address        string `env:"ADDRESS"`
-	WriteInterval  int    `env:"REPORT_INTERVAL"`
-	Collectnterval int    `env:"POLL_INTERVAL"`
+	ReportInterval int    `env:"REPORT_INTERVAL"`
+	PollInterval   int    `env:"POLL_INTERVAL"`
 }
 
 func InitAgentConfig() *AgentConfig {
@@ -19,12 +19,12 @@ func InitAgentConfig() *AgentConfig {
 		envConfig.Address = flagsConfig.Address
 	}
 
-	if envConfig.Collectnterval == 0 {
-		envConfig.Collectnterval = flagsConfig.Collectnterval
+	if envConfig.PollInterval == 0 {
+		envConfig.PollInterval = flagsConfig.PollInterval
 	}
 
-	if envConfig.WriteInterval == 0 {
-		envConfig.WriteInterval = flagsConfig.WriteInterval
+	if envConfig.ReportInterval == 0 {
+		envConfig.ReportInterval = flagsConfig.ReportInterval
 	}
 
 	return envConfig
@@ -34,9 +34,9 @@ func initAgentFlags() *AgentConfig {
 	agentConfig := AgentConfig{}
 
 	pflag.StringVarP(&agentConfig.Address, "addr", "a", "http://localhost:8080", "Address host:port")
-	pflag.IntVarP(&agentConfig.WriteInterval, "reportInterval", "r", 10,
+	pflag.IntVarP(&agentConfig.ReportInterval, "reportInterval", "r", 10,
 		"Wait interval in seconds before sending metrics to server")
-	pflag.IntVarP(&agentConfig.Collectnterval, "pollInterval", "p", 2,
+	pflag.IntVarP(&agentConfig.PollInterval, "pollInterval", "p", 2,
 		"Wait interval in seconds before reading system metrics")
 
 	pflag.Parse()

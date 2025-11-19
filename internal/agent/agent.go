@@ -31,7 +31,9 @@ func NewMetricsAgent(flags *config.AgentConfig) *MetricsAgent {
 }
 
 func (agent *MetricsAgent) collectMetrics() {
-	ticker := time.Tick(time.Duration(agent.config.Collectnterval) * time.Second)
+	logger.Info("Agent started collect metrics task")
+
+	ticker := time.Tick(time.Duration(agent.config.PollInterval) * time.Second)
 
 	for range ticker {
 		logger.Debug("Start collect metrics")
@@ -46,7 +48,8 @@ func (agent *MetricsAgent) collectMetrics() {
 }
 
 func (agent *MetricsAgent) writeMetrics() {
-	ticker := time.Tick(time.Duration(agent.config.WriteInterval) * time.Second)
+	logger.Info("Agent started write metrics task")
+	ticker := time.Tick(time.Duration(agent.config.ReportInterval) * time.Second)
 
 	for range ticker {
 		logger.Debug("Start write metrics")

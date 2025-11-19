@@ -13,6 +13,7 @@ func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, 
 	metric, validationRes := parseMetricParams(req)
 
 	if validationRes != nil {
+		logger.Error("Validation error", "message", validationRes.Message)
 		http.Error(res, validationRes.Message, validationRes.Code)
 		return
 	}
@@ -27,6 +28,7 @@ func (container *ApplicationAPIContainer) UpdateMetricV2(res http.ResponseWriter
 	metric, validationRes := parseMetricParamsV2(req)
 
 	if validationRes != nil {
+		logger.Error("Validation error", "message", validationRes.Message)
 		http.Error(res, validationRes.Message, validationRes.Code)
 		return
 	}
@@ -44,6 +46,7 @@ func (container *ApplicationAPIContainer) UpdateMetricV2(res http.ResponseWriter
 		return
 	}
 
+	logger.Error("Internal server error", err.Error())
 	res.WriteHeader(http.StatusInternalServerError)
 }
 

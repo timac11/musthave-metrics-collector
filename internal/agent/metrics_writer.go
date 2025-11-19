@@ -21,7 +21,7 @@ func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
 	res, err := mw.client.R().SetBody(metric).Post("/update")
 
 	if err != nil {
-		logger.Error("Failed to write metric", metric)
+		logger.Error("Failed to write metric", "id", metric.ID, "type", metric.MType)
 		logger.Error(err.Error())
 		return
 	}

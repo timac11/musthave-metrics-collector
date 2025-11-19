@@ -26,12 +26,16 @@ func NewMemStorage(backupPath string) *MemStorage {
 	return ms
 }
 
-func (ms *MemStorage) Save(value model.Metrics) {
+func (ms *MemStorage) Save(metric model.Metrics) {
 	// save if does not exist and rewrite if exist
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
-	ms.storage[value.ID+"-"+value.MType] = value
+	ms.storage[buildMetricHash(metric)] = metric
 	ms.backup()
+}
+
+func buildMetricHash(metric model.Metrics) string {
+	return metric.ID + "-" + metric.MType
 }
 
 func (ms *MemStorage) Get(id string, mType string) *model.Metrics {
@@ -59,7 +63,7 @@ func (ms *MemStorage) GetAll() []model.Metrics {
 func (ms *MemStorage) Restore() error {
 	data, err := os.ReadFile(ms.backupPath)
 	if err != nil {
-		logger.Error("Failed to read backup file", err)
+		logger.Error("Failed to read backup file", err.Error())
 		return err
 	}
 
@@ -67,7 +71,7 @@ func (ms *MemStorage) Restore() error {
 	err = json.Unmarshal(data, &memsMap)
 
 	if err != nil {
-		logger.Error("Failed to unmarshal backup file", err)
+		logger.Error("Failed to unmarshal backup file", err.Error())
 		return err
 	}
 
@@ -82,16 +86,16 @@ func (ms *MemStorage) backup() error {
 	file, err := os.OpenFile(ms.backupPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 
 	if err != nil {
-		logger.Error("Failed to open backup file", err)
+		logger.Error("Failed to open backup file", err.Error())
 		return err
 	}
 	defer file.Close()
 
-	data, marshalErr := json.Marshal(&ms.storage)
+	data, err := json.Marshal(&ms.storage)
 
-	if marshalErr != nil {
-		logger.Error("Failed to marshal backup file", marshalErr)
-		return marshalErr
+	if err != nil {
+		logger.Error("Failed to marshal backup file", err.Error())
+		return err
 	}
 
 	file.Write(data)
