@@ -5,19 +5,17 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/handler"
 	"github.com/timac11/musthave-metrics-collector/internal/handler/middleware"
+	"github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
 	"github.com/timac11/musthave-metrics-collector/internal/repository"
 	"github.com/timac11/musthave-metrics-collector/internal/service"
 	"net/http"
 )
 
 func InitRouter(serverConfig *config.ServerConfig) *chi.Mux {
-	memStorage := repository.NewMemStorage(serverConfig.FileStoragePath)
+	persistentStorage := persistentstorage.NewPersistentStorage(serverConfig.FileStoragePath)
+	memStorage := repository.NewMemStorage(persistentStorage, serverConfig.Restore)
 	service := service.NewService(memStorage)
 	handlers := handler.NewApplicationAPIContainer(*service)
-
-	if serverConfig.Restore {
-		memStorage.Restore()
-	}
 
 	m := middleware.NewMiddleware()
 	middlewares := []func(http.Handler) http.Handler{

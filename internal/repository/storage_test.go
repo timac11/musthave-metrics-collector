@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
 	"os"
 	"testing"
 )
@@ -28,7 +29,9 @@ func TestSaveMetricToStorage(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.ID, func(t *testing.T) {
 			dbFilePath := "/tmp/db" + test.ID + ".json"
-			storage := NewMemStorage(dbFilePath)
+
+			persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
+			storage := NewMemStorage(persistentStorage, false)
 
 			storage.Save(test)
 			savedMetric := storage.Get(test.ID, test.MType)
@@ -56,7 +59,8 @@ func TestUpdatMetricInStorage(t *testing.T) {
 	dbFilePath := "/tmp/db_test_update.json"
 	defer os.Remove(dbFilePath)
 
-	storage := NewMemStorage(dbFilePath)
+	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
+	storage := NewMemStorage(persistentStorage, false)
 
 	storage.Save(metric)
 	savedMetric := storage.Get(metric.ID, metric.MType)
@@ -83,7 +87,9 @@ func TestUpdatMetricInStorage(t *testing.T) {
 
 func TestBackupInStorage(t *testing.T) {
 	dbFilePath := "/tmp/db_test_backup.json"
-	storage := NewMemStorage(dbFilePath)
+	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
+	storage := NewMemStorage(persistentStorage, false)
+
 	defer os.Remove(dbFilePath)
 
 	value := float64(123.456)
@@ -138,9 +144,8 @@ func TestRestoreInStorage(t *testing.T) {
 	file.Close()
 
 	// restore metrics in storage
-
-	storage := NewMemStorage(dbFilePath)
-	storage.Restore()
+	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
+	storage := NewMemStorage(persistentStorage, true)
 
 	restoredMetric := storage.Get(metric.ID, metric.MType)
 

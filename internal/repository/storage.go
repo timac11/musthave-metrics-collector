@@ -1,26 +1,40 @@
 package repository
 
 import (
-	"encoding/json"
-	"os"
-	"sync"
-
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
+	"sync"
 )
 
-type MemStorage struct {
-	storage    map[string]model.Metrics
-	mu         *sync.Mutex
-	backupPath string
+type PersistentStorage interface {
+	Store(value map[string]model.Metrics) error
+	Restore() (map[string]model.Metrics, error)
 }
 
-func NewMemStorage(backupPath string) *MemStorage {
+type MemStorage struct {
+	storage           map[string]model.Metrics
+	mu                *sync.Mutex
+	persistentStorage PersistentStorage
+}
+
+func NewMemStorage(ps PersistentStorage, restore bool) *MemStorage {
 	mu := sync.Mutex{}
+	storage := make(map[string]model.Metrics)
+
+	if restore {
+		metrics, err := ps.Restore()
+		if err != nil {
+			logger.Error("Failed restore metrics")
+			logger.Error(err.Error())
+		} else {
+			storage = metrics
+		}
+	}
+
 	ms := &MemStorage{
-		storage:    make(map[string]model.Metrics),
-		mu:         &mu,
-		backupPath: backupPath,
+		storage:           storage,
+		mu:                &mu,
+		persistentStorage: ps,
 	}
 
 	return ms
@@ -31,7 +45,7 @@ func (ms *MemStorage) Save(metric model.Metrics) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
 	ms.storage[buildMetricHash(metric)] = metric
-	ms.backup()
+	ms.persistentStorage.Store(ms.storage)
 }
 
 func buildMetricHash(metric model.Metrics) string {
@@ -58,47 +72,4 @@ func (ms *MemStorage) GetAll() []model.Metrics {
 	}
 
 	return metrics
-}
-
-func (ms *MemStorage) Restore() error {
-	data, err := os.ReadFile(ms.backupPath)
-	if err != nil {
-		logger.Error("Failed to read backup file", err.Error())
-		return err
-	}
-
-	var memsMap map[string]model.Metrics
-	err = json.Unmarshal(data, &memsMap)
-
-	if err != nil {
-		logger.Error("Failed to unmarshal backup file", err.Error())
-		return err
-	}
-
-	ms.storage = memsMap
-
-	return nil
-}
-
-func (ms *MemStorage) backup() error {
-	logger.Info("Start backup data to file")
-
-	file, err := os.OpenFile(ms.backupPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
-
-	if err != nil {
-		logger.Error("Failed to open backup file", err.Error())
-		return err
-	}
-	defer file.Close()
-
-	data, err := json.Marshal(&ms.storage)
-
-	if err != nil {
-		logger.Error("Failed to marshal backup file", err.Error())
-		return err
-	}
-
-	file.Write(data)
-
-	return nil
 }

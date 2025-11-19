@@ -1,26 +1,26 @@
 package handler
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
+	"github.com/timac11/musthave-metrics-collector/internal/repository"
+	"github.com/timac11/musthave-metrics-collector/internal/service"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strconv"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"github.com/timac11/musthave-metrics-collector/internal/repository"
-	"github.com/timac11/musthave-metrics-collector/internal/service"
 )
 
 func TestPositiveUpdateMetricHandler(t *testing.T) {
 	val := float64(1)
 
 	dbFilePath := "./tmp/db.json"
-	storage := repository.NewMemStorage(dbFilePath)
+	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
+	storage := repository.NewMemStorage(persistentStorage, false)
 	service := service.NewService(storage)
 	handlers := NewApplicationAPIContainer(*service)
 
@@ -72,8 +72,11 @@ func TestNegativeUpdateMetric(t *testing.T) {
 	type result struct {
 		code int
 	}
+	dbFilePath := "/temp/db.json"
+	defer os.Remove(dbFilePath)
 
-	storage := repository.NewMemStorage("./db.json")
+	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
+	storage := repository.NewMemStorage(persistentStorage, false)
 	service := service.NewService(storage)
 	handlers := NewApplicationAPIContainer(*service)
 
