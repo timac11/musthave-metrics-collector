@@ -54,7 +54,6 @@ func initAgentEnv() *AgentConfig {
 
 type ServerConfig struct {
 	Address         string `env:"ADDRESS"`
-	StoreInterval   int    `env:"STORE_INTERVAL" default:"-1"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	Restore         bool   `env:"RESTORE"`
 }
@@ -69,10 +68,6 @@ func InitServerConfig() *ServerConfig {
 
 	if serverEnv.FileStoragePath == "" {
 		serverEnv.FileStoragePath = serverFlags.FileStoragePath
-	}
-
-	if serverEnv.StoreInterval == -1 {
-		serverEnv.StoreInterval = serverFlags.StoreInterval
 	}
 
 	if !serverEnv.Restore {
@@ -94,7 +89,6 @@ func initServerFlags() *ServerConfig {
 	serverFlags := ServerConfig{}
 
 	pflag.StringVarP(&serverFlags.Address, "addr", "a", "localhost:8080", "Server address host:port")
-	pflag.IntVarP(&serverFlags.StoreInterval, "storeInterval", "i", 300, "Store interval")
 	pflag.StringVarP(&serverFlags.FileStoragePath, "file", "f", "./db.json", "File to store JSON file with metrics")
 	pflag.BoolVarP(&serverFlags.Restore, "restore", "r", true, "Restore or not metrics from file storage")
 
