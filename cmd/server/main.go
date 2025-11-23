@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/timac11/musthave-metrics-collector/internal/config"
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/router"
 )
 
@@ -13,9 +14,13 @@ func main() {
 }
 
 func run() {
-	flags := config.InitServerFlags()
-	mux := router.InitRouter()
-	err := http.ListenAndServe(flags.Address, mux)
+	conf := config.InitServerConfig()
+	logger.Initialize("INFO")
+	mux := router.InitRouter(conf)
+
+	logger.Info("Starting server on address: ", conf.Address)
+
+	err := http.ListenAndServe(conf.Address, mux)
 	if err != nil {
 		log.Fatal(err)
 	}

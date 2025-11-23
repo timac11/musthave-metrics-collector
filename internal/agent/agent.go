@@ -13,7 +13,7 @@ type MetricsAgent struct {
 	collector *MetricsCollector
 	mu        *sync.Mutex
 	metrics   []model.Metrics
-	flags     *config.AgentFlags
+	config    *config.AgentConfig
 }
 
 func (agent *MetricsAgent) Start() {
@@ -22,16 +22,18 @@ func (agent *MetricsAgent) Start() {
 	select {}
 }
 
-func NewMetricsAgent(flags *config.AgentFlags) *MetricsAgent {
+func NewMetricsAgent(flags *config.AgentConfig) *MetricsAgent {
 	mc := newMetricsCollector()
 	mw := newMetricsWriter(flags.Address)
 	mu := sync.Mutex{}
-	agent := &MetricsAgent{writer: mw, collector: mc, flags: flags, mu: &mu}
+	agent := &MetricsAgent{writer: mw, collector: mc, config: flags, mu: &mu}
 	return agent
 }
 
 func (agent *MetricsAgent) collectMetrics() {
-	ticker := time.Tick(time.Duration(agent.flags.Collectnterval) * time.Second)
+	logger.Info("Agent started collect metrics task")
+
+	ticker := time.Tick(time.Duration(agent.config.PollInterval) * time.Second)
 
 	for range ticker {
 		logger.Debug("Start collect metrics")
@@ -46,7 +48,8 @@ func (agent *MetricsAgent) collectMetrics() {
 }
 
 func (agent *MetricsAgent) writeMetrics() {
-	ticker := time.Tick(time.Duration(agent.flags.WriteInterval) * time.Second)
+	logger.Info("Agent started write metrics task")
+	ticker := time.Tick(time.Duration(agent.config.ReportInterval) * time.Second)
 
 	for range ticker {
 		logger.Debug("Start write metrics")

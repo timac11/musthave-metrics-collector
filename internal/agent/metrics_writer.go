@@ -1,13 +1,10 @@
 package agent
 
 import (
-	"fmt"
 	"github.com/go-resty/resty/v2"
-	"strconv"
-	"strings"
-
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
+	"strings"
 )
 
 type MetricsWriter struct {
@@ -21,20 +18,21 @@ func (mw *MetricsWriter) Write(metrics []model.Metrics) {
 }
 
 func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
-	value := strconv.FormatFloat(*metric.Value, 'f', -1, 64)
-	url := fmt.Sprintf("update/%s/%s/%s", metric.MType, metric.ID, value)
-	res, err := mw.client.R().Post(url)
+	res, err := mw.client.R().SetBody(metric).Post("/update")
+
 	if err != nil {
-		logger.Error("Failed to write metric:")
+		logger.Error("Failed to write metric", "id", metric.ID, "type", metric.MType)
 		logger.Error(err.Error())
 		return
 	}
 
-	logger.Log(fmt.Sprintf("updated metric %s status %s", metric.ID, res.Status()))
+	logger.Info("Success update metric", "metric ID", metric.ID, "status", res.Status())
 }
 
 func newMetricsWriter(url string) *MetricsWriter {
 	client := resty.New()
+
+	client.SetRetryCount(3)
 
 	if !strings.HasPrefix(url, "http") {
 		url = "http://" + url

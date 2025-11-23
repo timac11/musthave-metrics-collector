@@ -1,26 +1,61 @@
 package repository
 
 import (
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"sync"
 )
 
-type MemStorage struct {
-	storage map[string]model.Metrics
-	mu      *sync.Mutex
+type PersistentStorage interface {
+	Store(value map[string]model.Metrics) error
+	Restore() (map[string]model.Metrics, error)
 }
 
-func (ms *MemStorage) Save(value model.Metrics) {
+type MemStorage struct {
+	storage           map[string]model.Metrics
+	mu                *sync.Mutex
+	persistentStorage PersistentStorage
+}
+
+func NewMemStorage(ps PersistentStorage, restore bool) *MemStorage {
+	mu := sync.Mutex{}
+	storage := make(map[string]model.Metrics)
+
+	if restore {
+		metrics, err := ps.Restore()
+		if err != nil {
+			logger.Error("Failed restore metrics")
+			logger.Error(err.Error())
+		} else {
+			storage = metrics
+		}
+	}
+
+	ms := &MemStorage{
+		storage:           storage,
+		mu:                &mu,
+		persistentStorage: ps,
+	}
+
+	return ms
+}
+
+func (ms *MemStorage) Save(metric model.Metrics) {
 	// save if does not exist and rewrite if exist
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
-	ms.storage[value.ID] = value
+	ms.storage[buildMetricHash(metric)] = metric
+	ms.persistentStorage.Store(ms.storage)
 }
 
-func (ms *MemStorage) Get(key string) *model.Metrics {
+func buildMetricHash(metric model.Metrics) string {
+	return metric.ID + "-" + metric.MType
+}
+
+func (ms *MemStorage) Get(id string, mType string) *model.Metrics {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
-	val, ok := ms.storage[key]
+	val, ok := ms.storage[id+"-"+mType]
 	if ok {
 		return &val
 	}
@@ -37,14 +72,4 @@ func (ms *MemStorage) GetAll() []model.Metrics {
 	}
 
 	return metrics
-}
-
-func NewMemStorage() *MemStorage {
-	mu := sync.Mutex{}
-	ms := &MemStorage{
-		storage: make(map[string]model.Metrics),
-		mu:      &mu,
-	}
-
-	return ms
 }

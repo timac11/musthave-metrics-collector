@@ -1,31 +1,35 @@
 package logger
 
 import (
-	"fmt"
-	"log"
+	"go.uber.org/zap"
 )
 
-func convertInterfaceToString(val interface{}) string {
-	switch v := val.(type) {
-	case string:
-		return v
-	case int:
-		return fmt.Sprintf("%d", v)
-	case float64:
-		return fmt.Sprintf("%f", v)
-	default:
-		return fmt.Sprintf("%v", v)
+var logger *zap.SugaredLogger = zap.NewNop().Sugar()
+
+func Initialize(level string) error {
+	lvl, err := zap.ParseAtomicLevel(level)
+	if err != nil {
+		return err
 	}
+	cfg := zap.NewProductionConfig()
+	cfg.Level = lvl
+
+	zl, err := cfg.Build()
+	if err != nil {
+		return err
+	}
+	logger = zl.Sugar()
+	return nil
 }
 
-func Debug(param interface{}) {
-	log.Println("[DEBUG] " + convertInterfaceToString(param))
+func Debug(msg string, params ...interface{}) {
+	logger.Debug(msg, params)
 }
 
-func Log(param interface{}) {
-	log.Println("[LOG] " + convertInterfaceToString(param))
+func Info(msg string, params ...interface{}) {
+	logger.Info(msg, params)
 }
 
-func Error(param interface{}) {
-	log.Println("[ERROR] " + convertInterfaceToString(param))
+func Error(msg string, params ...interface{}) {
+	logger.Error(msg, params)
 }
