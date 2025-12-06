@@ -1,4 +1,4 @@
-package repository
+package memorystorage
 
 import (
 	"encoding/json"

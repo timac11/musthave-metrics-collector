@@ -56,6 +56,7 @@ type ServerConfig struct {
 	Address         string `env:"ADDRESS"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	Restore         bool   `env:"RESTORE"`
+	DatabaseDsn     string `env:"DATABASE_DSN"`
 }
 
 func InitServerConfig() *ServerConfig {
@@ -68,6 +69,10 @@ func InitServerConfig() *ServerConfig {
 
 	if serverEnv.FileStoragePath == "" {
 		serverEnv.FileStoragePath = serverFlags.FileStoragePath
+	}
+
+	if serverEnv.DatabaseDsn == "" {
+		serverEnv.DatabaseDsn = serverFlags.DatabaseDsn
 	}
 
 	if !serverEnv.Restore {
@@ -89,6 +94,7 @@ func initServerFlags() *ServerConfig {
 	serverFlags := ServerConfig{}
 
 	pflag.StringVarP(&serverFlags.Address, "addr", "a", "localhost:8080", "Server address host:port")
+	pflag.StringVarP(&serverFlags.DatabaseDsn, "db", "d", "postgres://username:password@localhost:5432/db", "Postgres database url")
 	pflag.StringVarP(&serverFlags.FileStoragePath, "file", "f", "./db.json", "File to store JSON file with metrics")
 	pflag.BoolVarP(&serverFlags.Restore, "restore", "r", true, "Restore or not metrics from file storage")
 

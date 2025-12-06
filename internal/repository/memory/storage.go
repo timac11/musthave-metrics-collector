@@ -1,4 +1,4 @@
-package repository
+package memorystorage
 
 import (
 	"github.com/timac11/musthave-metrics-collector/internal/logger"

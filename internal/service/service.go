@@ -10,16 +10,26 @@ type Repository interface {
 	GetAll() []model.Metrics
 }
 
-type Service struct {
-	storage Repository
+type DbClient interface {
+	Ping() error
 }
 
-func NewService(storage Repository) *Service {
+type Service struct {
+	storage Repository
+	client  DbClient
+}
+
+func NewService(storage Repository, client DbClient) *Service {
 	service := &Service{
 		storage: storage,
+		client:  client,
 	}
 
 	return service
+}
+
+func (service *Service) DbPing() error {
+	return service.client.Ping()
 }
 
 func (service *Service) Save(metric model.Metrics) {
