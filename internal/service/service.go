@@ -10,16 +10,16 @@ type Repository interface {
 	GetAll() []model.Metrics
 }
 
-type DbClient interface {
+type DBClient interface {
 	Ping() error
 }
 
 type Service struct {
 	storage Repository
-	client  DbClient
+	client  DBClient
 }
 
-func NewService(storage Repository, client DbClient) *Service {
+func NewService(storage Repository, client DBClient) *Service {
 	service := &Service{
 		storage: storage,
 		client:  client,
@@ -28,7 +28,7 @@ func NewService(storage Repository, client DbClient) *Service {
 	return service
 }
 
-func (service *Service) DbPing() error {
+func (service *Service) DBPing() error {
 	return service.client.Ping()
 }
 

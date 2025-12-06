@@ -5,7 +5,7 @@ import (
 )
 
 func (container *ApplicationAPIContainer) DbPing(res http.ResponseWriter, req *http.Request) {
-	err := container.service.DbPing()
+	err := container.service.DBPing()
 	res.Header().Set("Content-Type", "text/html")
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
