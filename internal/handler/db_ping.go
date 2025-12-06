@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (container *ApplicationAPIContainer) DbPing(res http.ResponseWriter, req *http.Request) {
+func (container *ApplicationAPIContainer) DBPing(res http.ResponseWriter, req *http.Request) {
 	err := container.service.DBPing()
 	res.Header().Set("Content-Type", "text/html")
 	if err != nil {

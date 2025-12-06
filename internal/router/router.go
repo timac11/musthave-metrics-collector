@@ -35,7 +35,7 @@ func InitRouter(serverConfig *config.ServerConfig) *chi.Mux {
 	router.Post("/value", handlers.GetFullMetricInfo)
 	router.Post("/value/", handlers.GetFullMetricInfo)
 	router.Get("/value/{metricType}/{metricName}", handlers.GetMetric)
-	router.Get("/ping", handlers.DbPing)
+	router.Get("/ping", handlers.DBPing)
 
 	router.Get(`/`, handlers.GetMetricsPage)
 
