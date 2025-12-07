@@ -56,45 +56,45 @@ func (client *PgClient) Save(ctx context.Context, metric model.Metrics) error {
 
 	_, err = client.conn.Exec(
 		ctx,
-		query, 
-        metric.ID,
-        metric.MType, 
-        metric.Delta, 
-        metric.Value, 
-        metric.Hash,
+		query,
+		metric.ID,
+		metric.MType,
+		metric.Delta,
+		metric.Value,
+		metric.Hash,
 	)
 
 	return err
 }
 
-func (client * PgClient) Get(ctx context.Context, id string, mType string) (*model.Metrics, error) {
+func (client *PgClient) Get(ctx context.Context, id string, mType string) (*model.Metrics, error) {
 	err := client.Ping(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-    query := `
+	query := `
         SELECT name, mtype, delta, value, hash
         FROM metrics
         WHERE name = $1 AND mtype = $2
     `
-    
-    var metric model.Metrics
-    
-    err = client.conn.QueryRow(ctx, query, id, mType).Scan(
-        &metric.ID,
-        &metric.MType,
-        &metric.Delta,
-        &metric.Value,
-        &metric.Hash,
-    )
-    
-    if err != nil {
-        logger.Error("Failed to get metric", err)
-        return nil, err
-    }
-    
-    return &metric, nil
+
+	var metric model.Metrics
+
+	err = client.conn.QueryRow(ctx, query, id, mType).Scan(
+		&metric.ID,
+		&metric.MType,
+		&metric.Delta,
+		&metric.Value,
+		&metric.Hash,
+	)
+
+	if err != nil {
+		logger.Error("Failed to get metric", err)
+		return nil, err
+	}
+
+	return &metric, nil
 }
 
 func (client *PgClient) GetAll(ctx context.Context) ([]model.Metrics, error) {
@@ -102,41 +102,41 @@ func (client *PgClient) GetAll(ctx context.Context) ([]model.Metrics, error) {
 	if err != nil {
 		return nil, err
 	}
-    
-    query := `
+
+	query := `
         SELECT name, mtype, delta, value, hash
         FROM metrics
         ORDER BY name, mtype
     `
-    
-    rows, err := client.conn.Query(ctx, query)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
-    
-    var metrics []model.Metrics
-    for rows.Next() {
-        var metric model.Metrics
-        
-        err := rows.Scan(
-            &metric.ID,
-            &metric.MType,
-            &metric.Delta,
-            &metric.Value,
-            &metric.Hash,
-        )
 
-        if err != nil {
-            return nil, err
-        }
-        
-        metrics = append(metrics, metric)
-    }
-    
-    if rows.Err() != nil {
-        return nil, err
-    }
-    
-    return metrics, nil
-} 
+	rows, err := client.conn.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var metrics []model.Metrics
+	for rows.Next() {
+		var metric model.Metrics
+
+		err := rows.Scan(
+			&metric.ID,
+			&metric.MType,
+			&metric.Delta,
+			&metric.Value,
+			&metric.Hash,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		metrics = append(metrics, metric)
+	}
+
+	if rows.Err() != nil {
+		return nil, err
+	}
+
+	return metrics, nil
+}

@@ -20,7 +20,7 @@ func InitRouter(serverConfig *config.ServerConfig) *chi.Mux {
 		serviceInstance = service.NewService(dbClient)
 	} else {
 		persistentStorage := persistentstorage.NewPersistentStorage(serverConfig.FileStoragePath)
-		memStorage := memorystorage.NewMemStorage(persistentStorage, serverConfig.Restore)		
+		memStorage := memorystorage.NewMemStorage(persistentStorage, serverConfig.Restore)
 		serviceInstance = service.NewService(memStorage)
 	}
 
