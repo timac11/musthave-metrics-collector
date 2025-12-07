@@ -15,12 +15,7 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 
 	metric, err := container.service.Get(metricName, metricType)
 
-	if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if metric == nil {
+	if err != nil || metric == nil {
 		res.WriteHeader(http.StatusNotFound)
 		return
 	}

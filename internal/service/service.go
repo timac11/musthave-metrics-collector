@@ -62,20 +62,11 @@ func (service *Service) Save(metric model.Metrics) error {
 func (service *Service) Get(id string, mType string) (*model.Metrics, error) {
 	storage := service.storage
 	metric, err := storage.Get(context.Background(), id, mType)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return metric, nil
+	return metric, err
 }
 
 func (service *Service) GetAll() ([]model.Metrics, error) {
 	storage := service.storage
 	metrics, err := storage.GetAll(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	return metrics, nil
+	return metrics, err
 }
