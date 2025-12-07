@@ -33,7 +33,7 @@ func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
 func newMetricsWriter(url string) *MetricsWriter {
 	client := resty.New()
 
-	client.SetRetryWaitTime(1* time.Second).SetRetryCount(10)
+	client.SetRetryCount(3)
 
 	if !strings.HasPrefix(url, "http") {
 		url = "http://" + url
