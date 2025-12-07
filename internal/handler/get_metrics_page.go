@@ -6,7 +6,14 @@ import (
 )
 
 func (container *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter, req *http.Request) {
-	metrics := container.service.GetAll()
+	metrics, err := container.service.GetAll()
+
+	if err != nil {
+		http.Error(res, "Internal server error", http.StatusInternalServerError)
+		logger.Error("Internal server error", err.Error())
+		return
+	}
+
 	indexTpl := container.templatesMap["index"]
 	res.Header().Set("Content-Type", "text/html")
 
@@ -17,7 +24,7 @@ func (container *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter
 
 	logger.Info("metrics", metrics)
 
-	err := indexTpl.Execute(res, metrics)
+	err = indexTpl.Execute(res, metrics)
 	if err != nil {
 		http.Error(res, "Internal server error", http.StatusInternalServerError)
 		logger.Error("Internal server error", err.Error())
