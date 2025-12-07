@@ -13,11 +13,18 @@ import (
 )
 
 func InitRouter(serverConfig *config.ServerConfig) *chi.Mux {
-	persistentStorage := persistentstorage.NewPersistentStorage(serverConfig.FileStoragePath)
-	memStorage := memorystorage.NewMemStorage(persistentStorage, serverConfig.Restore)
-	dbClient := dbstorage.NewPgClient(serverConfig.DatabaseDsn)
-	service := service.NewService(memStorage, dbClient)
-	handlers := handler.NewApplicationAPIContainer(*service)
+	var serviceInstance *service.Service
+
+	if serverConfig.DatabaseDsn != "" {
+		dbClient := dbstorage.NewPgClient(serverConfig.DatabaseDsn)
+		serviceInstance = service.NewService(dbClient)
+	} else {
+		persistentStorage := persistentstorage.NewPersistentStorage(serverConfig.FileStoragePath)
+		memStorage := memorystorage.NewMemStorage(persistentStorage, serverConfig.Restore)		
+		serviceInstance = service.NewService(memStorage)
+	}
+
+	handlers := handler.NewApplicationAPIContainer(*serviceInstance)
 
 	m := middleware.NewMiddleware()
 	middlewares := []func(http.Handler) http.Handler{

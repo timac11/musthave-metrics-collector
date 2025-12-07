@@ -94,7 +94,7 @@ func initServerFlags() *ServerConfig {
 	serverFlags := ServerConfig{}
 
 	pflag.StringVarP(&serverFlags.Address, "addr", "a", "localhost:8080", "Server address host:port")
-	pflag.StringVarP(&serverFlags.DatabaseDsn, "db", "d", "postgres://username:password@localhost:5432/db", "Postgres database url")
+	pflag.StringVarP(&serverFlags.DatabaseDsn, "db", "d", "", "Postgres database url")
 	pflag.StringVarP(&serverFlags.FileStoragePath, "file", "f", "./db.json", "File to store JSON file with metrics")
 	pflag.BoolVarP(&serverFlags.Restore, "restore", "r", true, "Restore or not metrics from file storage")
 

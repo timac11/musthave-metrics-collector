@@ -7,6 +7,7 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
 	"os"
 	"testing"
+	"context"
 )
 
 func TestSaveMetricToStorage(t *testing.T) {
@@ -33,8 +34,8 @@ func TestSaveMetricToStorage(t *testing.T) {
 			persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
 			storage := NewMemStorage(persistentStorage, false)
 
-			storage.Save(test)
-			savedMetric := storage.Get(test.ID, test.MType)
+			storage.Save(context.Background(), test)
+			savedMetric, _ := storage.Get(context.Background(), test.ID, test.MType)
 
 			assert.Equal(t, savedMetric.ID, test.ID)
 			assert.Equal(t, savedMetric.MType, test.MType)
@@ -62,25 +63,25 @@ func TestUpdatMetricInStorage(t *testing.T) {
 	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
 	storage := NewMemStorage(persistentStorage, false)
 
-	storage.Save(metric)
-	savedMetric := storage.Get(metric.ID, metric.MType)
+	storage.Save(context.Background(), metric)
+	savedMetric, _ := storage.Get(context.Background(), metric.ID, metric.MType)
 
 	assert.Equal(t, savedMetric.ID, metric.ID)
 	assert.Equal(t, savedMetric.MType, metric.MType)
 	assert.Equal(t, savedMetric.Value, metric.Value)
 	assert.Equal(t, savedMetric.Delta, metric.Delta)
 
-	allMetrics := storage.GetAll()
+	allMetrics, _ := storage.GetAll(context.Background())
 
 	assert.Equal(t, len(allMetrics), 1)
 
 	metric.Value = &secondValue
-	storage.Save(metric)
-	savedMetric = storage.Get(metric.ID, metric.MType)
+	storage.Save(context.Background(), metric)
+	savedMetric, _ = storage.Get(context.Background(), metric.ID, metric.MType)
 
 	assert.Equal(t, *savedMetric.Value, secondValue)
 
-	allMetrics = storage.GetAll()
+	allMetrics, _ = storage.GetAll(context.Background())
 
 	assert.Equal(t, len(allMetrics), 1)
 }
@@ -100,7 +101,7 @@ func TestBackupInStorage(t *testing.T) {
 		Value: &value,
 	}
 
-	storage.Save(metric)
+	storage.Save(context.Background(), metric)
 
 	data, err := os.ReadFile(dbFilePath)
 	assert.Nil(t, err)
@@ -147,7 +148,7 @@ func TestRestoreInStorage(t *testing.T) {
 	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
 	storage := NewMemStorage(persistentStorage, true)
 
-	restoredMetric := storage.Get(metric.ID, metric.MType)
+	restoredMetric, _ := storage.Get(context.Background(), metric.ID, metric.MType)
 
 	assert.Equal(t, metric.ID, restoredMetric.ID)
 	assert.Equal(t, metric.MType, restoredMetric.MType)

@@ -1,9 +1,12 @@
 package memorystorage
 
 import (
+	"context"
+	"errors"
+	"sync"
+
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"sync"
 )
 
 type PersistentStorage interface {
@@ -40,29 +43,31 @@ func NewMemStorage(ps PersistentStorage, restore bool) *MemStorage {
 	return ms
 }
 
-func (ms *MemStorage) Save(metric model.Metrics) {
+func (ms *MemStorage) Save(_ context.Context, metric model.Metrics) error {
 	// save if does not exist and rewrite if exist
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
 	ms.storage[buildMetricHash(metric)] = metric
 	ms.persistentStorage.Store(ms.storage)
+
+	return nil
 }
 
-func buildMetricHash(metric model.Metrics) string {
-	return metric.ID + "-" + metric.MType
+func (ms *MemStorage) Ping(_ context.Context) error {
+	return errors.New("connection was not established")
 }
 
-func (ms *MemStorage) Get(id string, mType string) *model.Metrics {
+func (ms *MemStorage) Get(_ context.Context, id string, mType string) (*model.Metrics, error) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
 	val, ok := ms.storage[id+"-"+mType]
 	if ok {
-		return &val
+		return &val, nil
 	}
-	return nil
+	return nil, errors.New("failed to store metrics")
 }
 
-func (ms *MemStorage) GetAll() []model.Metrics {
+func (ms *MemStorage) GetAll(_ context.Context) ([]model.Metrics, error) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
 	metrics := make([]model.Metrics, 0, len(ms.storage))
@@ -71,5 +76,9 @@ func (ms *MemStorage) GetAll() []model.Metrics {
 		metrics = append(metrics, v)
 	}
 
-	return metrics
+	return metrics, nil
+}
+
+func buildMetricHash(metric model.Metrics) string {
+	return metric.ID + "-" + metric.MType
 }

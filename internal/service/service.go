@@ -1,61 +1,76 @@
 package service
 
 import (
+	"context"
+
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 type Repository interface {
-	Save(value model.Metrics)
-	Get(id string, mType string) *model.Metrics
-	GetAll() []model.Metrics
-}
-
-type DBClient interface {
-	Ping() error
+	Save(ctx context.Context, value model.Metrics) error
+	Get(ctx context.Context, id string, mType string) (*model.Metrics, error)
+	GetAll(ctx context.Context) ([]model.Metrics, error)
+	Ping(ctx context.Context) error
 }
 
 type Service struct {
 	storage Repository
-	client  DBClient
 }
 
-func NewService(storage Repository, client DBClient) *Service {
+func NewService(storage Repository) *Service {
 	service := &Service{
 		storage: storage,
-		client:  client,
 	}
 
 	return service
 }
 
 func (service *Service) DBPing() error {
-	return service.client.Ping()
+	return service.storage.Ping(context.Background())
 }
 
 func (service *Service) Save(metric model.Metrics) {
 	storage := service.storage
-	existedMetric := storage.Get(metric.ID, metric.MType)
 
 	if metric.MType == model.Counter {
-		if existedMetric != nil {
+		existedMetric, err := storage.Get(context.Background(), metric.ID, metric.MType)
+
+		logger.Info("existed metric", existedMetric.ID, existedMetric.Delta)
+		logger.Info("error", err)
+
+		if err == nil && existedMetric != nil {
 			delta := *existedMetric.Delta + int64(*metric.Delta)
 			existedMetric.Delta = &delta
-			storage.Save(*existedMetric)
+
+			logger.Info("updated metric", existedMetric.ID, *existedMetric.Delta)
+
+			storage.Save(context.Background(), *existedMetric)
 		} else {
-			storage.Save(metric)
+			storage.Save(context.Background(), metric)
 		}
 	} else {
-		storage.Save(metric)
+		storage.Save(context.Background(), metric)
 	}
 }
 
 func (service *Service) Get(id string, mType string) *model.Metrics {
 	storage := service.storage
-	metric := storage.Get(id, mType)
+	metric, err := storage.Get(context.Background(), id, mType)
+
+	if err == nil {
+		return nil
+	}
+
 	return metric
 }
 
 func (service *Service) GetAll() []model.Metrics {
 	storage := service.storage
-	return storage.GetAll()
+	metrics, err := storage.GetAll(context.Background())
+	if err != nil {
+		return []model.Metrics{}
+	}
+
+	return metrics
 }
