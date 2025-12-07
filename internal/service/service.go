@@ -36,11 +36,7 @@ func (service *Service) Save(metric model.Metrics) error {
 
 	if metric.MType == model.Counter {
 		var existedMetric *model.Metrics
-		existedMetric, err = storage.Get(context.Background(), metric.ID, metric.MType)
-
-		if err != nil {
-			return nil
-		}
+		existedMetric, _ = storage.Get(context.Background(), metric.ID, metric.MType)
 
 		if existedMetric != nil {
 			delta := *existedMetric.Delta + int64(*metric.Delta)
