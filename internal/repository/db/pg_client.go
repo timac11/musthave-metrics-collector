@@ -2,27 +2,36 @@ package dbstorage
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"log"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 type PgClient struct {
-	conn *pgx.Conn
+	conn *sql.DB
 }
 
 func NewPgClient(url string) *PgClient {
-	conn, err := pgx.Connect(context.Background(), url)
+	conn, err := sql.Open("pgx", url)
 
 	if err != nil {
 		logger.Error("Failed connect to database")
 		logger.Error(err.Error())
+		log.Fatal(err)
 	}
 
 	client := &PgClient{conn: conn}
+
+	err = client.applyMigration(context.Background())
+
 	return client
 }
 
@@ -34,7 +43,7 @@ func (client *PgClient) Ping(ctx context.Context) error {
 		return errors.New("connection was not established")
 	}
 
-	return client.conn.Ping(ctx)
+	return client.conn.Ping()
 }
 
 func (client *PgClient) Save(ctx context.Context, metric model.Metrics) error {
@@ -55,7 +64,6 @@ func (client *PgClient) Save(ctx context.Context, metric model.Metrics) error {
     `
 
 	_, err = client.conn.Exec(
-		ctx,
 		query,
 		metric.ID,
 		metric.MType,
@@ -81,7 +89,7 @@ func (client *PgClient) Get(ctx context.Context, id string, mType string) (*mode
 
 	var metric model.Metrics
 
-	err = client.conn.QueryRow(ctx, query, id, mType).Scan(
+	err = client.conn.QueryRow(query, id, mType).Scan(
 		&metric.ID,
 		&metric.MType,
 		&metric.Delta,
@@ -109,7 +117,7 @@ func (client *PgClient) GetAll(ctx context.Context) ([]model.Metrics, error) {
         ORDER BY name, mtype
     `
 
-	rows, err := client.conn.Query(ctx, query)
+	rows, err := client.conn.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -139,4 +147,39 @@ func (client *PgClient) GetAll(ctx context.Context) ([]model.Metrics, error) {
 	}
 
 	return metrics, nil
+}
+
+func (client *PgClient) applyMigration(ctx context.Context) error {
+	err := client.Ping(ctx)
+	if err != nil {
+		return err
+	}
+
+	driver, err := postgres.WithInstance(client.conn, &postgres.Config{})
+	if err != nil {
+		logger.Error("failed to create driver", err)
+		return err
+	}
+
+	migrations, err := migrate.NewWithDatabaseInstance(
+		"file://./migrations",
+		"postgres",
+		driver,
+	)
+
+	if err != nil {
+		logger.Error("failed to apply migrations", err)
+		return err
+	}
+
+	// Apply migrations
+	err = migrations.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		logger.Error("failed to apply migrations", err)
+		return err
+	}
+
+	logger.Info("migrations successfully applied")
+
+	return nil
 }
