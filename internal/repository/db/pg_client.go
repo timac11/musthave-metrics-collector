@@ -32,6 +32,10 @@ func NewPgClient(url string) *PgClient {
 
 	err = client.applyMigration(context.Background())
 
+    if err != nil {
+		log.Fatal(err)
+	}
+
 	return client
 }
 
@@ -43,7 +47,7 @@ func (client *PgClient) Ping(ctx context.Context) error {
 		return errors.New("connection was not established")
 	}
 
-	return client.conn.Ping()
+	return client.conn.PingContext(ctx)
 }
 
 func (client *PgClient) Save(ctx context.Context, metric model.Metrics) error {
@@ -63,7 +67,8 @@ func (client *PgClient) Save(ctx context.Context, metric model.Metrics) error {
             updated_at = CURRENT_TIMESTAMP
     `
 
-	_, err = client.conn.Exec(
+	_, err = client.conn.ExecContext(
+        ctx,
 		query,
 		metric.ID,
 		metric.MType,
@@ -89,7 +94,7 @@ func (client *PgClient) Get(ctx context.Context, id string, mType string) (*mode
 
 	var metric model.Metrics
 
-	err = client.conn.QueryRow(query, id, mType).Scan(
+	err = client.conn.QueryRowContext(ctx, query, id, mType).Scan(
 		&metric.ID,
 		&metric.MType,
 		&metric.Delta,
@@ -117,7 +122,7 @@ func (client *PgClient) GetAll(ctx context.Context) ([]model.Metrics, error) {
         ORDER BY name, mtype
     `
 
-	rows, err := client.conn.Query(query)
+	rows, err := client.conn.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
