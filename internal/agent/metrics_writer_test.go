@@ -33,9 +33,8 @@ func TestWrite(t *testing.T) {
 		mw.Write(metrics)
 
 		// Verify requests were made
-		require.Len(t, requests, 2)
-		assert.Contains(t, requests[0], "/update")
-		assert.Contains(t, requests[1], "/update")
+		require.Len(t, requests, 1)
+		assert.Contains(t, requests[0], "/updates")
 
 		testServer.Close()
 	})

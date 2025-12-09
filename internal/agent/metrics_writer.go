@@ -12,9 +12,20 @@ type MetricsWriter struct {
 }
 
 func (mw *MetricsWriter) Write(metrics []model.Metrics) {
-	for _, metric := range metrics {
-		mw.writeMetric(metric)
+	res, err := mw.client.R().SetBody(metrics).Post("/updates")
+
+	if err != nil {
+		logger.Error("Failed to write metrics")
+		logger.Error(err.Error())
+		return
 	}
+
+	if res != nil && res.StatusCode() != 200 {
+		logger.Error("Failed to write metrics", "status", res.StatusCode())
+		return
+	}
+
+	logger.Info("Success updated metrics", "status", res.Status())
 }
 
 func (mw *MetricsWriter) writeMetric(metric model.Metrics) {

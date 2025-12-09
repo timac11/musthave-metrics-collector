@@ -43,12 +43,32 @@ func NewMemStorage(ps PersistentStorage, restore bool) *MemStorage {
 	return ms
 }
 
-func (ms *MemStorage) Save(_ context.Context, metric model.Metrics) error {
-	// save if does not exist and rewrite if exist
+func (ms *MemStorage) Save(ctx context.Context, metric model.Metrics) error {
+	existedMetric, _ := ms.Get(ctx, metric.ID, metric.MType)
+
+	if existedMetric != nil {
+		if existedMetric.MType == model.Counter && existedMetric.Delta != nil {
+			newDelta := *metric.Delta + *existedMetric.Delta
+			metric.Delta = &newDelta
+		}
+	}
+
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
 	ms.storage[buildMetricHash(metric)] = metric
 	ms.persistentStorage.Store(ms.storage)
+
+	return nil
+}
+
+func (ms *MemStorage) SaveAll(ctx context.Context, metrics []model.Metrics) error {
+	for _, metric := range metrics {
+		err := ms.Save(ctx, metric)
+
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

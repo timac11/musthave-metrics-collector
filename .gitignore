@@ -28,3 +28,4 @@ metricstest_v2-darwin-amd64
 
 # file storage
 cmd/server/db.json
+db.json

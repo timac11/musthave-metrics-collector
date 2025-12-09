@@ -32,7 +32,7 @@ func NewPgClient(url string) *PgClient {
 
 	err = client.applyMigration(context.Background())
 
-    if err != nil {
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -57,18 +57,22 @@ func (client *PgClient) Save(ctx context.Context, metric model.Metrics) error {
 	}
 
 	query := `
-        INSERT INTO metrics (name, mtype, delta, value, hash)
-        VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (name, mtype) 
-        DO UPDATE SET
-            delta = EXCLUDED.delta,
-            value = EXCLUDED.value,
-            hash = EXCLUDED.hash,
-            updated_at = CURRENT_TIMESTAMP
+    INSERT INTO metrics (name, mtype, delta, value, hash)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT (name, mtype) 
+    DO UPDATE SET
+        delta = CASE 
+            WHEN EXCLUDED.mtype = 'counter' AND EXCLUDED.delta IS NOT NULL
+            THEN COALESCE(metrics.delta, 0) + EXCLUDED.delta
+            ELSE EXCLUDED.delta
+        END,
+        value = EXCLUDED.value,
+        hash = EXCLUDED.hash,
+        updated_at = CURRENT_TIMESTAMP
     `
 
 	_, err = client.conn.ExecContext(
-        ctx,
+		ctx,
 		query,
 		metric.ID,
 		metric.MType,
@@ -108,6 +112,46 @@ func (client *PgClient) Get(ctx context.Context, id string, mType string) (*mode
 	}
 
 	return &metric, nil
+}
+
+func (client *PgClient) SaveAll(ctx context.Context, metrics []model.Metrics) error {
+	err := client.Ping(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(metrics) == 0 {
+		return nil
+	}
+
+	if err := client.Ping(ctx); err != nil {
+		return err
+	}
+
+	tx, err := client.conn.BeginTx(ctx, nil)
+	if err != nil {
+		logger.Error("Failed to create Save all transaction", err)
+		return err
+	}
+
+	defer tx.Rollback()
+
+	for _, metric := range metrics {
+		err = client.Save(ctx, metric)
+
+		if err != nil {
+			logger.Error("Failed insert metrics", err)
+			return err
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		logger.Error("Failed to commit transaction", err)
+		return err
+	}
+
+	return nil
 }
 
 func (client *PgClient) GetAll(ctx context.Context) ([]model.Metrics, error) {

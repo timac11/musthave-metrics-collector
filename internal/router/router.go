@@ -38,6 +38,8 @@ func InitRouter(serverConfig *config.ServerConfig) *chi.Mux {
 
 	router.Post("/update", handlers.UpdateMetricV2)
 	router.Post("/update/", handlers.UpdateMetricV2)
+	router.Post("/updates", handlers.UpdateMetrics)
+	router.Post("/updates/", handlers.UpdateMetrics)
 	router.Post("/update/{metricType}/{metricName}/{value}", handlers.UpdateMetric)
 	router.Post("/value", handlers.GetFullMetricInfo)
 	router.Post("/value/", handlers.GetFullMetricInfo)
