@@ -1,10 +1,15 @@
 package agent
 
 import (
+	"context"
+	"strings"
+	"time"
+
+	"github.com/avast/retry-go/v4"
 	"github.com/go-resty/resty/v2"
+
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"strings"
 )
 
 type MetricsWriter struct {
@@ -12,7 +17,16 @@ type MetricsWriter struct {
 }
 
 func (mw *MetricsWriter) Write(metrics []model.Metrics) {
-	res, err := mw.client.R().SetBody(metrics).Post("/updates")
+	var res *resty.Response
+	var err error
+
+	err = retry.Do(
+		func() error {
+			res, err = mw.client.R().SetBody(metrics).Post("/updates")
+			return err
+		},
+		mw.getRetryOptions()...,
+	)
 
 	if err != nil {
 		logger.Error("Failed to write metrics")
@@ -29,7 +43,16 @@ func (mw *MetricsWriter) Write(metrics []model.Metrics) {
 }
 
 func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
-	res, err := mw.client.R().SetBody(metric).Post("/update")
+	var res *resty.Response
+	var err error
+
+	err = retry.Do(
+		func() error {
+			res, err = mw.client.R().SetBody(metric).Post("/update")
+			return err
+		},
+		mw.getRetryOptions()...,
+	)
 
 	if err != nil {
 		logger.Error("Failed to write metric", "id", metric.ID, "type", metric.MType)
@@ -43,8 +66,6 @@ func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
 func newMetricsWriter(url string) *MetricsWriter {
 	client := resty.New()
 
-	client.SetRetryCount(3)
-
 	if !strings.HasPrefix(url, "http") {
 		url = "http://" + url
 	}
@@ -56,4 +77,14 @@ func newMetricsWriter(url string) *MetricsWriter {
 	}
 
 	return mw
+}
+
+func (mw *MetricsWriter) getRetryOptions() []retry.Option {
+	return []retry.Option{
+		retry.Attempts(3),
+		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+			return 1*time.Second + time.Duration(n-1)*2*time.Second
+		}),
+		retry.Context(context.Background()),
+	}
 }

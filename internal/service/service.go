@@ -2,6 +2,14 @@ package service
 
 import (
 	"context"
+	"errors"
+	"time"
+
+	"github.com/avast/retry-go/v4"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
+
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
@@ -30,23 +38,70 @@ func (service *Service) DBPing() error {
 }
 
 func (service *Service) Save(metric model.Metrics) error {
-	storage := service.storage
-	return storage.Save(context.Background(), metric)
+	return retry.Do(
+		func() error {
+			storage := service.storage
+			return storage.Save(context.Background(), metric)
+		},
+		service.getRetryOptions()...,
+	)
 }
 
 func (service *Service) SaveAll(metrics []model.Metrics) error {
-	storage := service.storage
-	return storage.SaveAll(context.Background(), metrics)
+	return retry.Do(
+		func() error {
+			storage := service.storage
+			return storage.SaveAll(context.Background(), metrics)
+		},
+		service.getRetryOptions()...,
+	)
 }
 
 func (service *Service) Get(id string, mType string) (*model.Metrics, error) {
-	storage := service.storage
-	metric, err := storage.Get(context.Background(), id, mType)
+	var metric *model.Metrics
+	var err error
+
+	err = retry.Do(
+		func() error {
+			storage := service.storage
+			metric, err = storage.Get(context.Background(), id, mType)
+			return err
+		},
+		service.getRetryOptions()...,
+	)
+
 	return metric, err
 }
 
 func (service *Service) GetAll() ([]model.Metrics, error) {
-	storage := service.storage
-	metrics, err := storage.GetAll(context.Background())
+	var metrics []model.Metrics
+	var err error
+
+	err = retry.Do(
+		func() error {
+			storage := service.storage
+			metrics, err = storage.GetAll(context.Background())
+			return err
+		},
+		service.getRetryOptions()...,
+	)
+
 	return metrics, err
+}
+
+func (service *Service) getRetryOptions() []retry.Option {
+	return []retry.Option{
+		retry.RetryIf(func(errAttempt error) bool {
+			var pgErr *pgconn.PgError
+			if errors.As(errAttempt, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code) {
+				return true
+			}
+			return false
+		}),
+		retry.Attempts(3),
+		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+			return 1*time.Second + time.Duration(n-1)*2*time.Second
+		}),
+		retry.Context(context.Background()),
+	}
 }
