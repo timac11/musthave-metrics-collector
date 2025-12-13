@@ -100,7 +100,7 @@ func (service *Service) getRetryOptions() []retry.Option {
 		}),
 		retry.Attempts(3),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
-			return 1*time.Second + time.Duration(n-1)*2*time.Second
+			return time.Second + time.Duration(n*2) * time.Second
 		}),
 		retry.Context(context.Background()),
 	}
