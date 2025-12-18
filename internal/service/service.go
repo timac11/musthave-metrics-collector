@@ -110,12 +110,8 @@ func (service *Service) GetAll() ([]model.Metrics, error) {
 
 func (service *Service) getRetryOptions() []retry.Option {
 	return []retry.Option{
-		retry.RetryIf(func(errAttempt error) bool {
-			var pgErr *pgconn.PgError
-			if errors.As(errAttempt, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code) {
-				return true
-			}
-			return false
+		retry.RetryIf(func(err error) bool {
+			return service.isRetryableError(err)
 		}),
 		retry.Attempts(3),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
@@ -123,4 +119,17 @@ func (service *Service) getRetryOptions() []retry.Option {
 		}),
 		retry.Context(context.Background()),
 	}
+}
+
+func (service *Service) isRetryableError(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgerrcode.IsConnectionException(pgErr.Code) ||
+			pgerrcode.IsTransactionRollback(pgErr.Code) ||
+			pgErr.Code == pgerrcode.ExclusionViolation ||
+			pgErr.Code == pgerrcode.UniqueViolation {
+			return true
+		}
+	}
+	return false
 }
