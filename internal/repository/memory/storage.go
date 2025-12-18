@@ -84,7 +84,7 @@ func (ms *MemStorage) Get(_ context.Context, id string, mType string) (*model.Me
 	if ok {
 		return &val, nil
 	}
-	return nil, nil
+	return nil, errors.New("failed to get metric")
 }
 
 func (ms *MemStorage) GetAll(_ context.Context) ([]model.Metrics, error) {
