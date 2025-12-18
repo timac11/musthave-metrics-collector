@@ -9,6 +9,8 @@ type AgentConfig struct {
 	Address        string `env:"ADDRESS"`
 	ReportInterval int    `env:"REPORT_INTERVAL"`
 	PollInterval   int    `env:"POLL_INTERVAL"`
+	RetryAttempts  uint
+	RetryInterval  uint
 }
 
 func InitAgentConfig() *AgentConfig {
@@ -31,17 +33,17 @@ func InitAgentConfig() *AgentConfig {
 }
 
 func initAgentFlags() *AgentConfig {
-	agentConfig := AgentConfig{}
+	agentFlags := AgentConfig{}
 
-	pflag.StringVarP(&agentConfig.Address, "addr", "a", "http://localhost:8080", "Address host:port")
-	pflag.IntVarP(&agentConfig.ReportInterval, "reportInterval", "r", 10,
-		"Wait interval in seconds before sending metrics to server")
-	pflag.IntVarP(&agentConfig.PollInterval, "pollInterval", "p", 2,
-		"Wait interval in seconds before reading system metrics")
+	pflag.StringVarP(&agentFlags.Address, "addr", "a", "http://localhost:8080", "Address host:port")
+	pflag.IntVarP(&agentFlags.ReportInterval, "reportInterval", "r", 10, "Wait interval in seconds before sending metrics to server")
+	pflag.IntVarP(&agentFlags.PollInterval, "pollInterval", "p", 2, "Wait interval in seconds before reading system metrics")
+	pflag.UintVarP(&agentFlags.RetryAttempts, "retryAttempt", "ra", 3, "Count of retry attempts to execute metrics operation")
+	pflag.UintVarP(&agentFlags.RetryInterval, "retryInterval", "ri", 2, "Interval in seconds between metric operation attempts")
 
 	pflag.Parse()
 
-	return &agentConfig
+	return &agentFlags
 }
 
 func initAgentEnv() *AgentConfig {
@@ -57,6 +59,8 @@ type ServerConfig struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	Restore         bool   `env:"RESTORE"`
 	DatabaseDsn     string `env:"DATABASE_DSN"`
+	RetryAttempts   uint
+	RetryInterval   uint
 }
 
 func InitServerConfig() *ServerConfig {
@@ -79,6 +83,9 @@ func InitServerConfig() *ServerConfig {
 		serverEnv.Restore = serverFlags.Restore
 	}
 
+	serverEnv.RetryAttempts = serverFlags.RetryAttempts
+	serverEnv.RetryInterval = serverFlags.RetryInterval
+
 	return serverEnv
 }
 
@@ -97,6 +104,8 @@ func initServerFlags() *ServerConfig {
 	pflag.StringVarP(&serverFlags.DatabaseDsn, "db", "d", "", "Postgres database url")
 	pflag.StringVarP(&serverFlags.FileStoragePath, "file", "f", "./db.json", "File to store JSON file with metrics")
 	pflag.BoolVarP(&serverFlags.Restore, "restore", "r", true, "Restore or not metrics from file storage")
+	pflag.UintVarP(&serverFlags.RetryAttempts, "retryAttempt", "ra", 3, "Count of retry attempts to execute metrics operation")
+	pflag.UintVarP(&serverFlags.RetryInterval, "retryInterval", "ri", 2, "Interval in seconds between metric operation attempts")
 
 	pflag.Parse()
 

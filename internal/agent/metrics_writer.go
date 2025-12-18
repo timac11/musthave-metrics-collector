@@ -13,8 +13,14 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
+type MetricsWriterConfig struct {
+	Attempts         uint
+	AttemptsInterval uint
+}
+
 type MetricsWriter struct {
 	client resty.Client
+	config MetricsWriterConfig
 }
 
 func (mw *MetricsWriter) Write(metrics []model.Metrics) {
@@ -63,7 +69,7 @@ func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
 	logger.Info("Success update metric", "metric ID", metric.ID, "status", res.Status())
 }
 
-func newMetricsWriter(url string) *MetricsWriter {
+func newMetricsWriter(url string, config MetricsWriterConfig) *MetricsWriter {
 	client := resty.New()
 
 	if !strings.HasPrefix(url, "http") {
@@ -74,6 +80,7 @@ func newMetricsWriter(url string) *MetricsWriter {
 
 	mw := &MetricsWriter{
 		client: *client,
+		config: config,
 	}
 
 	return mw
@@ -81,9 +88,9 @@ func newMetricsWriter(url string) *MetricsWriter {
 
 func (mw *MetricsWriter) getRetryOptions() []retry.Option {
 	return []retry.Option{
-		retry.Attempts(3),
+		retry.Attempts(mw.config.Attempts),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
-			return time.Second + time.Duration(n*2)*time.Second
+			return time.Second + time.Duration(n*mw.config.AttemptsInterval)*time.Second
 		}),
 		retry.Context(context.Background()),
 	}

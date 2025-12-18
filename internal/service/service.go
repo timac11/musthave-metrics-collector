@@ -21,13 +21,20 @@ type Repository interface {
 	Ping(ctx context.Context) error
 }
 
-type Service struct {
-	storage Repository
+type ServiceConfig struct {
+	Attempts         uint
+	AttemptsInterval uint
 }
 
-func NewService(storage Repository) *Service {
+type Service struct {
+	storage Repository
+	config  ServiceConfig
+}
+
+func NewService(storage Repository, config ServiceConfig) *Service {
 	service := &Service{
 		storage: storage,
+		config:  config,
 	}
 
 	return service
@@ -113,9 +120,9 @@ func (service *Service) getRetryOptions() []retry.Option {
 		retry.RetryIf(func(err error) bool {
 			return service.isRetryableError(err)
 		}),
-		retry.Attempts(3),
+		retry.Attempts(service.config.Attempts),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
-			return time.Second + time.Duration(n*2)*time.Second
+			return time.Second + time.Duration(n*service.config.AttemptsInterval)*time.Second
 		}),
 		retry.Context(context.Background()),
 	}

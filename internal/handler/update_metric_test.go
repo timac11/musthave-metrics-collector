@@ -16,6 +16,8 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/service"
 )
 
+var defaultConfig service.ServiceConfig = service.ServiceConfig{Attempts: 1, AttemptsInterval: 2}
+
 func TestPositiveUpdateMetricHandler(t *testing.T) {
 	val := float64(1)
 
@@ -23,7 +25,7 @@ func TestPositiveUpdateMetricHandler(t *testing.T) {
 
 	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
 	storage := memorystorage.NewMemStorage(persistentStorage, false)
-	service := service.NewService(storage)
+	service := service.NewService(storage, defaultConfig)
 	handlers := NewApplicationAPIContainer(*service)
 
 	type result struct {
@@ -79,7 +81,7 @@ func TestNegativeUpdateMetric(t *testing.T) {
 
 	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
 	storage := memorystorage.NewMemStorage(persistentStorage, false)
-	service := service.NewService(storage)
+	service := service.NewService(storage, defaultConfig)
 	handlers := NewApplicationAPIContainer(*service)
 
 	tests := []struct {

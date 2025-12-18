@@ -22,11 +22,12 @@ func (agent *MetricsAgent) Start() {
 	select {}
 }
 
-func NewMetricsAgent(flags *config.AgentConfig) *MetricsAgent {
+func NewMetricsAgent(agentConfig *config.AgentConfig) *MetricsAgent {
 	mc := newMetricsCollector()
-	mw := newMetricsWriter(flags.Address)
+	writerConfig := MetricsWriterConfig{Attempts: agentConfig.RetryAttempts, AttemptsInterval: agentConfig.RetryInterval}
+	mw := newMetricsWriter(agentConfig.Address, writerConfig)
 	mu := sync.Mutex{}
-	agent := &MetricsAgent{writer: mw, collector: mc, config: flags, mu: &mu}
+	agent := &MetricsAgent{writer: mw, collector: mc, config: agentConfig, mu: &mu}
 	return agent
 }
 

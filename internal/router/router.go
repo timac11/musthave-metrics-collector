@@ -14,6 +14,7 @@ import (
 
 func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 	var serviceInstance *service.Service
+	serviceConfig := service.ServiceConfig{Attempts: serverConfig.RetryAttempts, AttemptsInterval: serverConfig.RetryInterval}
 
 	if serverConfig.DatabaseDsn != "" {
 		dbClient, err := dbstorage.NewPgClient(serverConfig.DatabaseDsn)
@@ -22,11 +23,11 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 			return nil, err
 		}
 
-		serviceInstance = service.NewService(dbClient)
+		serviceInstance = service.NewService(dbClient, serviceConfig)
 	} else {
 		persistentStorage := persistentstorage.NewPersistentStorage(serverConfig.FileStoragePath)
 		memStorage := memorystorage.NewMemStorage(persistentStorage, serverConfig.Restore)
-		serviceInstance = service.NewService(memStorage)
+		serviceInstance = service.NewService(memStorage, serviceConfig)
 	}
 
 	handlers := handler.NewApplicationAPIContainer(*serviceInstance)
