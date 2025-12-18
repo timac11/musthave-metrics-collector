@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"net/http"
 	"strings"
 	"time"
 
@@ -29,12 +30,11 @@ func (mw *MetricsWriter) Write(metrics []model.Metrics) {
 	)
 
 	if err != nil {
-		logger.Error("Failed to write metrics")
-		logger.Error(err.Error())
+		logger.Error("Failed to write metrics", err.Error())
 		return
 	}
 
-	if res != nil && res.StatusCode() != 200 {
+	if res.StatusCode() != http.StatusOK {
 		logger.Error("Failed to write metrics", "status", res.StatusCode())
 		return
 	}
@@ -83,7 +83,7 @@ func (mw *MetricsWriter) getRetryOptions() []retry.Option {
 	return []retry.Option{
 		retry.Attempts(3),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
-			return time.Second + time.Duration(n*2) * time.Second
+			return time.Second + time.Duration(n*2)*time.Second
 		}),
 		retry.Context(context.Background()),
 	}

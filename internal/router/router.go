@@ -12,11 +12,16 @@ import (
 	"net/http"
 )
 
-func InitRouter(serverConfig *config.ServerConfig) *chi.Mux {
+func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 	var serviceInstance *service.Service
 
 	if serverConfig.DatabaseDsn != "" {
-		dbClient := dbstorage.NewPgClient(serverConfig.DatabaseDsn)
+		dbClient, err := dbstorage.NewPgClient(serverConfig.DatabaseDsn)
+
+		if err != nil {
+			return nil, err
+		}
+
 		serviceInstance = service.NewService(dbClient)
 	} else {
 		persistentStorage := persistentstorage.NewPersistentStorage(serverConfig.FileStoragePath)
@@ -48,5 +53,5 @@ func InitRouter(serverConfig *config.ServerConfig) *chi.Mux {
 
 	router.Get(`/`, handlers.GetMetricsPage)
 
-	return router
+	return router, nil
 }

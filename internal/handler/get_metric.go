@@ -48,7 +48,6 @@ func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWri
 	metricValue, err := container.service.Get(metric.ID, metric.MType)
 
 	if err != nil {
-		logger.Error("Metric not found")
 		res.WriteHeader(http.StatusNotFound)
 		return
 	}

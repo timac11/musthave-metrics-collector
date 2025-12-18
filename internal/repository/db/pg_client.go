@@ -3,8 +3,8 @@ package dbstorage
 import (
 	"context"
 	"database/sql"
-	"errors"
-	"log"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -19,13 +19,12 @@ type PgClient struct {
 	conn *sql.DB
 }
 
-func NewPgClient(url string) *PgClient {
+func NewPgClient(url string) (*PgClient, error) {
 	conn, err := sql.Open("pgx", url)
 
 	if err != nil {
-		logger.Error("Failed connect to database")
-		logger.Error(err.Error())
-		log.Fatal(err)
+		logger.Error("Failed connect to database", err.Error())
+		return nil, err
 	}
 
 	client := &PgClient{conn: conn}
@@ -33,29 +32,20 @@ func NewPgClient(url string) *PgClient {
 	err = client.applyMigration(context.Background())
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return client
+	return client, nil
 }
 
 func (client *PgClient) Ping(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	if client.conn == nil {
-		return errors.New("connection was not established")
-	}
-
 	return client.conn.PingContext(ctx)
 }
 
 func (client *PgClient) Save(ctx context.Context, metric model.Metrics) error {
-	err := client.Ping(ctx)
-	if err != nil {
-		return err
-	}
-
 	query := `
     INSERT INTO metrics (name, mtype, delta, value, hash)
     VALUES ($1, $2, $3, $4, $5)
@@ -71,7 +61,7 @@ func (client *PgClient) Save(ctx context.Context, metric model.Metrics) error {
         updated_at = CURRENT_TIMESTAMP
     `
 
-	_, err = client.conn.ExecContext(
+	_, err := client.conn.ExecContext(
 		ctx,
 		query,
 		metric.ID,
@@ -85,11 +75,6 @@ func (client *PgClient) Save(ctx context.Context, metric model.Metrics) error {
 }
 
 func (client *PgClient) Get(ctx context.Context, id string, mType string) (*model.Metrics, error) {
-	err := client.Ping(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	query := `
         SELECT name, mtype, delta, value, hash
         FROM metrics
@@ -98,7 +83,7 @@ func (client *PgClient) Get(ctx context.Context, id string, mType string) (*mode
 
 	var metric model.Metrics
 
-	err = client.conn.QueryRowContext(ctx, query, id, mType).Scan(
+	err := client.conn.QueryRowContext(ctx, query, id, mType).Scan(
 		&metric.ID,
 		&metric.MType,
 		&metric.Delta,
@@ -107,7 +92,6 @@ func (client *PgClient) Get(ctx context.Context, id string, mType string) (*mode
 	)
 
 	if err != nil {
-		logger.Error("Failed to get metric", err)
 		return nil, err
 	}
 
@@ -115,11 +99,6 @@ func (client *PgClient) Get(ctx context.Context, id string, mType string) (*mode
 }
 
 func (client *PgClient) SaveAll(ctx context.Context, metrics []model.Metrics) error {
-	err := client.Ping(ctx)
-	if err != nil {
-		return err
-	}
-
 	if len(metrics) == 0 {
 		return nil
 	}
@@ -130,24 +109,52 @@ func (client *PgClient) SaveAll(ctx context.Context, metrics []model.Metrics) er
 
 	tx, err := client.conn.BeginTx(ctx, nil)
 	if err != nil {
-		logger.Error("Failed to create Save all transaction", err)
 		return err
 	}
 
 	defer tx.Rollback()
 
-	for _, metric := range metrics {
-		err = client.Save(ctx, metric)
+	valueStrings := make([]string, 0, len(metrics))
+	valueArgs := make([]interface{}, 0, len(metrics)*5)
+	index := 1
 
-		if err != nil {
-			logger.Error("Failed insert metrics", err)
-			return err
-		}
+	for _, metric := range metrics {
+
+		valueStrings = append(valueStrings,
+			fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)",
+				index, index+1, index+2, index+3, index+4))
+
+		valueArgs = append(valueArgs, metric.ID)
+		valueArgs = append(valueArgs, metric.MType)
+		valueArgs = append(valueArgs, metric.Delta)
+		valueArgs = append(valueArgs, metric.Value)
+		valueArgs = append(valueArgs, metric.Hash)
+
+		index += 5
 	}
 
-	// Commit transaction
+	query := fmt.Sprintf(`
+    	INSERT INTO metrics (name, mtype, delta, value, hash)
+    	VALUES %s
+    	ON CONFLICT (name, mtype) 
+    	DO UPDATE SET
+        	delta = CASE 
+            	WHEN EXCLUDED.mtype = 'counter' AND EXCLUDED.delta IS NOT NULL
+            	THEN COALESCE(metrics.delta, 0) + EXCLUDED.delta
+            	ELSE EXCLUDED.delta
+        	END,
+        	value = EXCLUDED.value,
+        	hash = EXCLUDED.hash,
+        	updated_at = CURRENT_TIMESTAMP
+    `, strings.Join(valueStrings, ","))
+
+	_, err = tx.ExecContext(ctx, query, valueArgs...)
+
+	if err != nil {
+		return err
+	}
+
 	if err := tx.Commit(); err != nil {
-		logger.Error("Failed to commit transaction", err)
 		return err
 	}
 
@@ -206,7 +213,6 @@ func (client *PgClient) applyMigration(ctx context.Context) error {
 
 	driver, err := postgres.WithInstance(client.conn, &postgres.Config{})
 	if err != nil {
-		logger.Error("failed to create driver", err)
 		return err
 	}
 
@@ -217,14 +223,12 @@ func (client *PgClient) applyMigration(ctx context.Context) error {
 	)
 
 	if err != nil {
-		logger.Error("failed to apply migrations", err)
 		return err
 	}
 
 	// Apply migrations
 	err = migrations.Up()
 	if err != nil && err != migrate.ErrNoChange {
-		logger.Error("failed to apply migrations", err)
 		return err
 	}
 
