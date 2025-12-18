@@ -48,10 +48,23 @@ func (service *Service) Save(metric model.Metrics) error {
 }
 
 func (service *Service) SaveAll(metrics []model.Metrics) error {
+	deduplicated := make(map[string]model.Metrics)
+
+	for _, metric := range metrics {
+		key := metric.ID + "-" + metric.MType
+		deduplicated[key] = metric
+	}
+
+	uniqueMetrics := make([]model.Metrics, 0, len(deduplicated))
+
+	for _, metric := range deduplicated {
+		uniqueMetrics = append(uniqueMetrics, metric)
+	}
+
 	return retry.Do(
 		func() error {
 			storage := service.storage
-			return storage.SaveAll(context.Background(), metrics)
+			return storage.SaveAll(context.Background(), uniqueMetrics)
 		},
 		service.getRetryOptions()...,
 	)
