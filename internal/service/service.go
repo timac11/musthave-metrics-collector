@@ -48,17 +48,23 @@ func (service *Service) Save(metric model.Metrics) error {
 }
 
 func (service *Service) SaveAll(metrics []model.Metrics) error {
-	deduplicated := make(map[string]model.Metrics)
+	deduplicated := make(map[string]*model.Metrics)
 
 	for _, metric := range metrics {
 		key := metric.ID + "-" + metric.MType
-		deduplicated[key] = metric
+		existed := deduplicated[key]
+		if existed != nil && existed.MType == model.Counter {
+			val := *existed.Delta + *metric.Delta
+			existed.Delta = &val
+		} else {
+			deduplicated[key] = &metric
+		}
 	}
 
 	uniqueMetrics := make([]model.Metrics, 0, len(deduplicated))
 
 	for _, metric := range deduplicated {
-		uniqueMetrics = append(uniqueMetrics, metric)
+		uniqueMetrics = append(uniqueMetrics, *metric)
 	}
 
 	return retry.Do(
