@@ -10,7 +10,7 @@ func (container *ApplicationAPIContainer) DBPing(res http.ResponseWriter, req *h
 	err := container.service.DBPing()
 	res.Header().Set("Content-Type", "text/html")
 	if err != nil {
-		logger.Error("Failed ping dtabase", err.Error())
+		logger.Error("Failed ping database", err.Error())
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
