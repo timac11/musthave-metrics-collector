@@ -18,7 +18,13 @@ func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, 
 		return
 	}
 
-	container.service.Save(*metric)
+	err := container.service.Save(*metric)
+
+	if err != nil {
+		logger.Error("Internal server error", err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
@@ -35,7 +41,13 @@ func (container *ApplicationAPIContainer) UpdateMetricV2(res http.ResponseWriter
 
 	logger.Info("Update metric params", metric.ID, metric.MType, metric.Value)
 
-	container.service.Save(*metric)
+	err := container.service.Save(*metric)
+
+	if err != nil {
+		logger.Error("Internal server error", err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	returnBody, err := json.Marshal(metric)
 

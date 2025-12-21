@@ -10,6 +10,8 @@ import (
 	"testing"
 )
 
+var defaultConfig MetricsWriterConfig = MetricsWriterConfig{Attempts: 1, AttemptsInterval: 2}
+
 func TestWrite(t *testing.T) {
 	t.Run("should each metric", func(t *testing.T) {
 		// Create test server to capture requests
@@ -29,13 +31,12 @@ func TestWrite(t *testing.T) {
 			{ID: "metric2", MType: model.Counter, Value: &value2},
 		}
 
-		mw := newMetricsWriter(testServer.URL)
+		mw := newMetricsWriter(testServer.URL, defaultConfig)
 		mw.Write(metrics)
 
 		// Verify requests were made
-		require.Len(t, requests, 2)
-		assert.Contains(t, requests[0], "/update")
-		assert.Contains(t, requests[1], "/update")
+		require.Len(t, requests, 1)
+		assert.Contains(t, requests[0], "/updates")
 
 		testServer.Close()
 	})
@@ -60,7 +61,7 @@ func TestWriteMetric(t *testing.T) {
 		}
 
 		require.NotPanics(t, func() {
-			mw := newMetricsWriter(testServer.URL)
+			mw := newMetricsWriter(testServer.URL, defaultConfig)
 			mw.writeMetric(metric)
 		})
 
@@ -97,7 +98,7 @@ func TestWriteMetric(t *testing.T) {
 					Value: &tc.value,
 				}
 
-				mw := newMetricsWriter(testServer.URL)
+				mw := newMetricsWriter(testServer.URL, defaultConfig)
 				mw.writeMetric(sendedMetric)
 
 				assert.Equal(t, tc.expected, capturedURL)

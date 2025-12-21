@@ -6,16 +6,31 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/handler"
 	"github.com/timac11/musthave-metrics-collector/internal/handler/middleware"
 	"github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
-	"github.com/timac11/musthave-metrics-collector/internal/repository"
+	"github.com/timac11/musthave-metrics-collector/internal/repository/db"
+	"github.com/timac11/musthave-metrics-collector/internal/repository/memory"
 	"github.com/timac11/musthave-metrics-collector/internal/service"
 	"net/http"
 )
 
-func InitRouter(serverConfig *config.ServerConfig) *chi.Mux {
-	persistentStorage := persistentstorage.NewPersistentStorage(serverConfig.FileStoragePath)
-	memStorage := repository.NewMemStorage(persistentStorage, serverConfig.Restore)
-	service := service.NewService(memStorage)
-	handlers := handler.NewApplicationAPIContainer(*service)
+func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
+	var serviceInstance *service.Service
+	serviceConfig := service.ServiceConfig{Attempts: serverConfig.RetryAttempts, AttemptsInterval: serverConfig.RetryInterval}
+
+	if serverConfig.DatabaseDsn != "" {
+		dbClient, err := dbstorage.NewPgClient(serverConfig.DatabaseDsn)
+
+		if err != nil {
+			return nil, err
+		}
+
+		serviceInstance = service.NewService(dbClient, serviceConfig)
+	} else {
+		persistentStorage := persistentstorage.NewPersistentStorage(serverConfig.FileStoragePath)
+		memStorage := memorystorage.NewMemStorage(persistentStorage, serverConfig.Restore)
+		serviceInstance = service.NewService(memStorage, serviceConfig)
+	}
+
+	handlers := handler.NewApplicationAPIContainer(*serviceInstance)
 
 	m := middleware.NewMiddleware()
 	middlewares := []func(http.Handler) http.Handler{
@@ -29,12 +44,15 @@ func InitRouter(serverConfig *config.ServerConfig) *chi.Mux {
 
 	router.Post("/update", handlers.UpdateMetricV2)
 	router.Post("/update/", handlers.UpdateMetricV2)
+	router.Post("/updates", handlers.UpdateMetrics)
+	router.Post("/updates/", handlers.UpdateMetrics)
 	router.Post("/update/{metricType}/{metricName}/{value}", handlers.UpdateMetric)
 	router.Post("/value", handlers.GetFullMetricInfo)
 	router.Post("/value/", handlers.GetFullMetricInfo)
 	router.Get("/value/{metricType}/{metricName}", handlers.GetMetric)
+	router.Get("/ping", handlers.DBPing)
 
 	router.Get(`/`, handlers.GetMetricsPage)
 
-	return router
+	return router, nil
 }
