@@ -52,7 +52,7 @@ func (m *Middleware) CheckSignatureMiddleware(h http.Handler) http.Handler {
 			hashInBytes := sha256.Sum256(bodyBytes)
 			signature := hex.EncodeToString(hashInBytes[:])
 
-			requestSignature := r.Header.Get("HashSHA256")
+			requestSignature := r.Header.Get("Hash")
 
 			logger.Info("request signature", requestSignature)
 			logger.Info("signature", signature)
