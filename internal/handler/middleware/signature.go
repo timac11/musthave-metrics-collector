@@ -53,7 +53,7 @@ func (m *Middleware) CheckSignatureMiddleware(h http.Handler) http.Handler {
 
 				requestSignature := r.Header.Get("HashSHA256")
 
-				if signature != requestSignature {
+				if requestSignature != "" && signature != requestSignature {
 					http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 					return
 				}
