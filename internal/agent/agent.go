@@ -24,7 +24,8 @@ func (agent *MetricsAgent) Start() {
 
 func NewMetricsAgent(agentConfig *config.AgentConfig) *MetricsAgent {
 	mc := newMetricsCollector()
-	writerConfig := MetricsWriterConfig{Attempts: agentConfig.RetryAttempts, AttemptsInterval: agentConfig.RetryInterval}
+	writerConfig := MetricsWriterConfig{Attempts: agentConfig.RetryAttempts, AttemptsInterval: agentConfig.RetryInterval, SigningKey: agentConfig.SigningKey}
+
 	mw := newMetricsWriter(agentConfig.Address, writerConfig)
 	mu := sync.Mutex{}
 	agent := &MetricsAgent{writer: mw, collector: mc, config: agentConfig, mu: &mu}

@@ -1,7 +1,9 @@
 package middleware
 
-type Middleware struct{}
+type Middleware struct {
+	hashingKey string
+}
 
-func NewMiddleware() *Middleware {
-	return &Middleware{}
+func NewMiddleware(hashingKey string) *Middleware {
+	return &Middleware{hashingKey: hashingKey}
 }

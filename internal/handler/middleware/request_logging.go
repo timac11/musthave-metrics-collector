@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"bytes"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"net/http"
 	"time"
@@ -13,10 +13,14 @@ func (m *Middleware) RequestLoggerMiddleware(h http.Handler) http.Handler {
 			return
 		}
 
-		ww := chiMiddleware.NewWrapResponseWriter(w, r.ProtoMajor)
+		recorder := &ResponseRecorder{
+			ResponseWriter: w,
+			body:           &bytes.Buffer{},
+			status:         http.StatusOK,
+		}
 
 		start := time.Now()
-		h.ServeHTTP(ww, r)
+		h.ServeHTTP(recorder, r)
 		end := time.Now()
 
 		logger.Info(
@@ -28,8 +32,8 @@ func (m *Middleware) RequestLoggerMiddleware(h http.Handler) http.Handler {
 
 		logger.Info(
 			"Response info",
-			"status", ww.Status(),
-			"bytes", ww.BytesWritten(),
+			"status", recorder.status,
+			"bytes", recorder.body.Len(),
 		)
 	})
 }
