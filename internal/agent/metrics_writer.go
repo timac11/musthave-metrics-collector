@@ -40,7 +40,7 @@ func (mw *MetricsWriter) Write(metrics []model.Metrics) error {
 
 	err = retry.Do(
 		func() error {
-			res, err = mw.client.R().SetBody(metrics).SetHeader("Hash", signature).Post("/updates")
+			res, err = mw.client.R().SetBody(metrics).SetHeader("HashSHA256", signature).Post("/updates")
 			return err
 		},
 		mw.getRetryOptions()...,
@@ -72,7 +72,7 @@ func (mw *MetricsWriter) writeMetric(metric model.Metrics) error {
 
 	err = retry.Do(
 		func() error {
-			res, err = mw.client.R().SetBody(metric).SetHeader("Hash", signature).Post("/update")
+			res, err = mw.client.R().SetBody(metric).SetHeader("HashSHA256", signature).Post("/update")
 			return err
 		},
 		mw.getRetryOptions()...,

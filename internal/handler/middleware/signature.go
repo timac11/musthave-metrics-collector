@@ -52,12 +52,9 @@ func (m *Middleware) CheckSignatureMiddleware(h http.Handler) http.Handler {
 			hashInBytes := sha256.Sum256(bodyBytes)
 			signature := hex.EncodeToString(hashInBytes[:])
 
-			requestSignature := r.Header.Get("Hash")
+			requestSignature := r.Header.Get("HashSHA256")
 
-			logger.Info("request signature", requestSignature)
-			logger.Info("signature", signature)
-
-			if signature != requestSignature {
+			if requestSignature != "" && signature != requestSignature {
 				http.Error(w, "Auth failed", http.StatusInternalServerError)
 				return
 			}
