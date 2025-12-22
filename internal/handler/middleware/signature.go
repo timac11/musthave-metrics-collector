@@ -37,24 +37,26 @@ func (m *Middleware) CheckSignatureMiddleware(h http.Handler) http.Handler {
 			return
 		}
 
-		if m.hashingKey != "" {
+		if (r.Method == "POST" || r.Method == "PUT") && m.hashingKey != "" {
 			bodyBytes, err := io.ReadAll(r.Body)
 
 			if err != nil {
-				http.Error(w, "Auth failed", http.StatusInternalServerError)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
 
 			r.Body.Close()
 
-			hashInBytes := sha256.Sum256(bodyBytes)
-			signature := hex.EncodeToString(hashInBytes[:])
+			if len(bodyBytes) != 0 {
+				hashInBytes := sha256.Sum256(bodyBytes)
+				signature := hex.EncodeToString(hashInBytes[:])
 
-			requestSignature := r.Header.Get("HashSHA256")
+				requestSignature := r.Header.Get("HashSHA256")
 
-			if requestSignature != "" && signature != requestSignature {
-				http.Error(w, "Auth failed", http.StatusInternalServerError)
-				return
+				if signature != requestSignature {
+					http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+					return
+				}
 			}
 
 			// reassign body
