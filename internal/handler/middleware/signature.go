@@ -6,8 +6,6 @@ import (
 	"encoding/hex"
 	"io"
 	"net/http"
-
-	"github.com/timac11/musthave-metrics-collector/internal/logger"
 )
 
 func (m *Middleware) SetSignatureMiddleware(h http.Handler) http.Handler {
