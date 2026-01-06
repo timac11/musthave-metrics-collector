@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"sort"
 
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 )
@@ -14,6 +15,10 @@ func (container *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter
 		logger.Error("Internal server error", err.Error())
 		return
 	}
+
+	sort.Slice(metrics, func(i, j int) bool {
+		return metrics[j].ID > metrics[i].ID
+	})
 
 	indexTpl := container.templatesMap["index"]
 	res.Header().Set("Content-Type", "text/html")

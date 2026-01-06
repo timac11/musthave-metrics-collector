@@ -10,6 +10,7 @@ type AgentConfig struct {
 	ReportInterval int    `env:"REPORT_INTERVAL"`
 	PollInterval   int    `env:"POLL_INTERVAL"`
 	SigningKey     string `env:"KEY"`
+	RateLimit      uint   `env:"RATE_LIMIT"`
 	RetryAttempts  uint
 	RetryInterval  uint
 }
@@ -30,6 +31,10 @@ func InitAgentConfig() *AgentConfig {
 		agentEnv.ReportInterval = agentFlags.ReportInterval
 	}
 
+	if agentEnv.RateLimit == 0 {
+		agentEnv.RateLimit = agentFlags.RateLimit
+	}
+
 	if agentEnv.SigningKey == "" {
 		agentEnv.SigningKey = agentFlags.SigningKey
 	}
@@ -45,6 +50,8 @@ func initAgentFlags() *AgentConfig {
 	pflag.IntVarP(&agentFlags.PollInterval, "pollInterval", "p", 2, "Wait interval in seconds before reading system metrics")
 	pflag.UintVar(&agentFlags.RetryAttempts, "retryAttempt", 3, "Count of retry attempts to execute metrics operation")
 	pflag.UintVar(&agentFlags.RetryInterval, "retryInterval", 2, "Interval in seconds between metric operation attempts")
+	pflag.UintVarP(&agentFlags.RateLimit, "rateLimit", "l", 1, "Count of workers")
+
 	pflag.StringVarP(&agentFlags.SigningKey, "signingKey", "k", "", "Signing key")
 
 	pflag.Parse()

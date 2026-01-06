@@ -3,8 +3,13 @@ package agent
 import (
 	"math/rand"
 	"runtime"
+	"slices"
+	"time"
 
 	"github.com/timac11/musthave-metrics-collector/internal/model"
+
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 type MetricsCollector struct {
@@ -12,17 +17,18 @@ type MetricsCollector struct {
 }
 
 func (mc *MetricsCollector) Collect() []model.Metrics {
-	memsMetrics := mc.collectMemsMetrics()
+	memsMetrics := mc.collectRuntimeMemsMetrics()
 	additionalMetrics := mc.collectAdditionalMetrics()
+	usageMetrics := mc.collectUsageMemsMetrics()
 
-	return append(memsMetrics, additionalMetrics...)
+	return slices.Concat(memsMetrics, additionalMetrics, usageMetrics)
 }
 
 func (mc *MetricsCollector) Reset() {
 	mc.pollCount = 0
 }
 
-func (mc *MetricsCollector) collectMemsMetrics() []model.Metrics {
+func (mc *MetricsCollector) collectRuntimeMemsMetrics() []model.Metrics {
 	var stats runtime.MemStats
 	runtime.ReadMemStats(&stats)
 	metricsMap := make(map[string]float64)
@@ -59,6 +65,33 @@ func (mc *MetricsCollector) collectMemsMetrics() []model.Metrics {
 
 	for key, value := range metricsMap {
 		metrics = append(metrics, model.Metrics{ID: key, MType: model.Gauge, Value: &value})
+	}
+
+	return metrics
+}
+
+func (mc *MetricsCollector) collectUsageMemsMetrics() []model.Metrics {
+	metrics := []model.Metrics{}
+	vmStat, err := mem.VirtualMemory()
+
+	if err == nil {
+		total := float64(vmStat.Total)
+		free := float64(vmStat.Free)
+
+		freeMetrics := []model.Metrics{
+			{ID: "TotalMemory", Value: &total, MType: model.Gauge},
+			{ID: "FreeMemory", Value: &free, MType: model.Gauge},
+		}
+
+		metrics = append(metrics, freeMetrics...)
+	}
+
+	percent, err := cpu.Percent(time.Millisecond, false)
+
+	if err == nil {
+		metrics = append(metrics, model.Metrics{
+			ID: "CPUutilization1", Value: &percent[0], MType: model.Gauge,
+		})
 	}
 
 	return metrics

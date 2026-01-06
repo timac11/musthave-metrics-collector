@@ -4,15 +4,13 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"sync"
 	"time"
 )
 
 type MetricsAgent struct {
 	writer    *MetricsWriter
 	collector *MetricsCollector
-	mu        *sync.Mutex
-	metrics   []model.Metrics
+	ch        chan *[]model.Metrics
 	config    *config.AgentConfig
 }
 
@@ -23,45 +21,38 @@ func (agent *MetricsAgent) Start() {
 }
 
 func NewMetricsAgent(agentConfig *config.AgentConfig) *MetricsAgent {
-	mc := newMetricsCollector()
 	writerConfig := MetricsWriterConfig{Attempts: agentConfig.RetryAttempts, AttemptsInterval: agentConfig.RetryInterval, SigningKey: agentConfig.SigningKey}
-
+	mc := newMetricsCollector()
 	mw := newMetricsWriter(agentConfig.Address, writerConfig)
-	mu := sync.Mutex{}
-	agent := &MetricsAgent{writer: mw, collector: mc, config: agentConfig, mu: &mu}
+
+	ch := make(chan *[]model.Metrics, agentConfig.RateLimit)
+
+	agent := &MetricsAgent{writer: mw, collector: mc, config: agentConfig, ch: ch}
 	return agent
 }
 
 func (agent *MetricsAgent) collectMetrics() {
 	logger.Info("Agent started collect metrics task")
-
 	ticker := time.Tick(time.Duration(agent.config.PollInterval) * time.Second)
+	collector := agent.collector
 
 	for range ticker {
 		logger.Debug("Start collect metrics")
-
-		agent.mu.Lock()
-		metrics := agent.collector.Collect()
-		agent.metrics = metrics
-		agent.mu.Unlock()
-
+		metrics := collector.Collect()
+		agent.ch <- &metrics
 		logger.Debug("Complete collect metrics")
 	}
 }
 
 func (agent *MetricsAgent) writeMetrics() {
 	logger.Info("Agent started write metrics task")
-	ticker := time.Tick(time.Duration(agent.config.ReportInterval) * time.Second)
+	writer := agent.writer
+	collector := agent.collector
 
-	for range ticker {
+	for metrics := range agent.ch {
 		logger.Debug("Start write metrics")
-
-		agent.mu.Lock()
-		metrics := agent.metrics
-		agent.writer.Write(metrics)
-		agent.collector.Reset()
-		agent.mu.Unlock()
-
+		writer.Write(*metrics)
+		collector.Reset()
 		logger.Debug("Complete write metrics")
 	}
 }

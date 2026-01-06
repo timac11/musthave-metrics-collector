@@ -20,7 +20,7 @@ var memsMetrics = []string{
 func TestCollectMemsMetrics(t *testing.T) {
 	t.Run("should collect all runtime memory metrics", func(t *testing.T) {
 		mc := newMetricsCollector()
-		metrics := mc.collectMemsMetrics()
+		metrics := mc.collectRuntimeMemsMetrics()
 
 		metricsMap := buildMetricMap(metrics)
 
