@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"runtime"
 	"slices"
+	"sync/atomic"
 	"time"
 
 	"github.com/timac11/musthave-metrics-collector/internal/model"
@@ -13,7 +14,7 @@ import (
 )
 
 type MetricsCollector struct {
-	pollCount int64
+	pollCount atomic.Int64
 }
 
 func (mc *MetricsCollector) Collect() []model.Metrics {
@@ -25,7 +26,7 @@ func (mc *MetricsCollector) Collect() []model.Metrics {
 }
 
 func (mc *MetricsCollector) Reset() {
-	mc.pollCount = 0
+	mc.pollCount.Store(0)
 }
 
 func (mc *MetricsCollector) collectRuntimeMemsMetrics() []model.Metrics {
@@ -98,8 +99,8 @@ func (mc *MetricsCollector) collectUsageMemsMetrics() []model.Metrics {
 }
 
 func (mc *MetricsCollector) collectAdditionalMetrics() []model.Metrics {
-	mc.pollCount += 1
-	pollCount := int64(mc.pollCount)
+	mc.pollCount.Add(1)
+	pollCount := int64(mc.pollCount.Load())
 	randomValue := rand.Float64()
 
 	metrics := []model.Metrics{
@@ -111,6 +112,6 @@ func (mc *MetricsCollector) collectAdditionalMetrics() []model.Metrics {
 }
 
 func newMetricsCollector() *MetricsCollector {
-	mc := &MetricsCollector{pollCount: 0}
+	mc := &MetricsCollector{pollCount: atomic.Int64{}}
 	return mc
 }

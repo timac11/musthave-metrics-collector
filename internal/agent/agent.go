@@ -1,10 +1,12 @@
 package agent
 
 import (
+	"sync"
+	"time"
+
 	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"time"
 )
 
 type MetricsAgent struct {
@@ -49,10 +51,21 @@ func (agent *MetricsAgent) writeMetrics() {
 	writer := agent.writer
 	collector := agent.collector
 
-	for metrics := range agent.ch {
-		logger.Debug("Start write metrics")
-		writer.Write(*metrics)
-		collector.Reset()
-		logger.Debug("Complete write metrics")
+	var wg sync.WaitGroup
+	numWorkers := int(agent.config.RateLimit)
+
+	for i := 1; i <= numWorkers; i++ {
+		wg.Add(1)
+		go func(worker int) {
+			defer wg.Done()
+			for metrics := range agent.ch {
+				logger.Debug("Start write metrics", "worker", worker)
+				writer.Write(*metrics)
+				collector.Reset()
+				logger.Debug("Complete write metrics", "worker", worker)
+			}
+		}(i)
 	}
+
+	wg.Wait()
 }
