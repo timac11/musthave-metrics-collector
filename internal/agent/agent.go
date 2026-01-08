@@ -60,9 +60,13 @@ func (agent *MetricsAgent) writeMetrics() {
 			defer wg.Done()
 			for metrics := range agent.ch {
 				logger.Debug("Start write metrics", "worker", worker)
-				writer.Write(*metrics)
-				collector.Reset()
-				logger.Debug("Complete write metrics", "worker", worker)
+				err := writer.Write(*metrics)
+				if err != nil {
+					logger.Error("Failed write metrics", "worker", worker, err)
+				} else {
+					collector.Reset()
+					logger.Debug("Complete write metrics", "worker", worker)
+				}
 			}
 		}(i)
 	}

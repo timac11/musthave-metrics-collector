@@ -22,7 +22,7 @@ func (container *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter
 
 	indexTpl := container.templatesMap["index"]
 	res.Header().Set("Content-Type", "text/html")
-	res.WriteHeader(200)
+	res.WriteHeader(http.StatusOK)
 
 	if indexTpl == nil {
 		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

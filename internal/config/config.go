@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/caarlos0/env"
 	"github.com/spf13/pflag"
 )
@@ -15,7 +17,7 @@ type AgentConfig struct {
 	RetryInterval  uint
 }
 
-func InitAgentConfig() *AgentConfig {
+func InitAgentConfig() (*AgentConfig, error) {
 	agentEnv := initAgentEnv()
 	agentFlags := initAgentFlags()
 
@@ -33,13 +35,17 @@ func InitAgentConfig() *AgentConfig {
 
 	if agentEnv.RateLimit == 0 {
 		agentEnv.RateLimit = agentFlags.RateLimit
+
+		if agentEnv.RateLimit == 0 {
+			return nil, fmt.Errorf("invalid count of workers: %d", agentEnv.RateLimit)
+		}
 	}
 
 	if agentEnv.SigningKey == "" {
 		agentEnv.SigningKey = agentFlags.SigningKey
 	}
 
-	return agentEnv
+	return agentEnv, nil
 }
 
 func initAgentFlags() *AgentConfig {

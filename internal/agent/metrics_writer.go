@@ -2,9 +2,7 @@ package agent
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -12,6 +10,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/go-resty/resty/v2"
 
+	"github.com/timac11/musthave-metrics-collector/internal/common/util"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
@@ -31,10 +30,9 @@ func (mw *MetricsWriter) Write(metrics []model.Metrics) error {
 	var res *resty.Response
 	var err error
 
-	signature, err := mw.getSignuture(metrics)
+	signature, err := util.CalculateSignuture(metrics, mw.config.SigningKey)
 
 	if err != nil {
-		logger.Error("Failed to calculate signature", err.Error())
 		return err
 	}
 
@@ -47,13 +45,11 @@ func (mw *MetricsWriter) Write(metrics []model.Metrics) error {
 	)
 
 	if err != nil {
-		logger.Error("Failed to write metrics", err.Error())
 		return err
 	}
 
 	if res.StatusCode() != http.StatusOK {
-		logger.Error("Failed to write metrics", "status", res.StatusCode())
-		return err
+		return fmt.Errorf("failed to write metrics, status = %d", res.StatusCode())
 	}
 
 	logger.Info("Success updated metrics", "status", res.Status())
@@ -63,7 +59,7 @@ func (mw *MetricsWriter) Write(metrics []model.Metrics) error {
 func (mw *MetricsWriter) writeMetric(metric model.Metrics) error {
 	var res *resty.Response
 	var err error
-	signature, err := mw.getSignuture(metric)
+	signature, err := util.CalculateSignuture(metric, mw.config.SigningKey)
 
 	if err != nil {
 		logger.Error("Failed to calculate signature", err.Error())
@@ -95,20 +91,6 @@ func (mw *MetricsWriter) getRetryOptions() []retry.Option {
 		}),
 		retry.Context(context.Background()),
 	}
-}
-
-func (mw *MetricsWriter) getSignuture(obj interface{}) (string, error) {
-	if mw.config.SigningKey == "" {
-		return "", nil
-	}
-
-	bytes, err := json.Marshal(obj)
-	if err != nil {
-		return "", err
-	}
-
-	hashInBytes := sha256.Sum256(bytes)
-	return hex.EncodeToString(hashInBytes[:]), nil
 }
 
 func newMetricsWriter(url string, config MetricsWriterConfig) *MetricsWriter {

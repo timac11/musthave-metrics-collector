@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"io"
 	"net/http"
+
+	"github.com/timac11/musthave-metrics-collector/internal/common/util"
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
 )
 
 func (m *Middleware) SetSignatureMiddleware(h http.Handler) http.Handler {
@@ -22,9 +23,15 @@ func (m *Middleware) SetSignatureMiddleware(h http.Handler) http.Handler {
 
 		h.ServeHTTP(recorder, r)
 
-		if m.hashingKey != "" {
-			hashInBytes := sha256.Sum256(recorder.body.Bytes())
-			signature := hex.EncodeToString(hashInBytes[:])
+		if m.signingKey != "" {
+			signature, err := util.CalculateSignuture(recorder.body.Bytes(), m.signingKey)
+
+			if err != nil {
+				logger.Error("Failed to calculate signature", err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
 			r.Header.Set("HashSHA256", signature)
 		}
 
@@ -37,7 +44,7 @@ func (m *Middleware) CheckSignatureMiddleware(h http.Handler) http.Handler {
 			return
 		}
 
-		if (r.Method == "POST" || r.Method == "PUT") && m.hashingKey != "" {
+		if (r.Method == "POST" || r.Method == "PUT") && m.signingKey != "" {
 			bodyBytes, err := io.ReadAll(r.Body)
 
 			if err != nil {
@@ -48,8 +55,13 @@ func (m *Middleware) CheckSignatureMiddleware(h http.Handler) http.Handler {
 			r.Body.Close()
 
 			if len(bodyBytes) != 0 {
-				hashInBytes := sha256.Sum256(bodyBytes)
-				signature := hex.EncodeToString(hashInBytes[:])
+				signature, err := util.CalculateSignuture(bodyBytes, m.signingKey)
+
+				if err != nil {
+					logger.Error("Failed to calculate signature", err)
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return
+				}
 
 				requestSignature := r.Header.Get("HashSHA256")
 
@@ -59,7 +71,6 @@ func (m *Middleware) CheckSignatureMiddleware(h http.Handler) http.Handler {
 				}
 			}
 
-			// reassign body
 			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		}
 

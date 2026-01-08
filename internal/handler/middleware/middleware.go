@@ -1,9 +1,9 @@
 package middleware
 
 type Middleware struct {
-	hashingKey string
+	signingKey string
 }
 
 func NewMiddleware(hashingKey string) *Middleware {
-	return &Middleware{hashingKey: hashingKey}
+	return &Middleware{signingKey: hashingKey}
 }
