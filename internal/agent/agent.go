@@ -1,18 +1,18 @@
 package agent
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
-	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 type MetricsAgent struct {
 	writer    *MetricsWriter
 	collector *MetricsCollector
-	ch        chan *[]model.Metrics
+	ch        chan *CollectedMetrics
 	config    *config.AgentConfig
 }
 
@@ -22,15 +22,23 @@ func (agent *MetricsAgent) Start() {
 	select {}
 }
 
-func NewMetricsAgent(agentConfig *config.AgentConfig) *MetricsAgent {
-	writerConfig := MetricsWriterConfig{Attempts: agentConfig.RetryAttempts, AttemptsInterval: agentConfig.RetryInterval, SigningKey: agentConfig.SigningKey}
+func NewMetricsAgent(agentConfig *config.AgentConfig) (*MetricsAgent, error) {
+	if agentConfig.RateLimit == 0 {
+		return nil, fmt.Errorf("invalid count of workers: %d", agentConfig.RateLimit)
+	}
+
+	writerConfig := MetricsWriterConfig{
+		Attempts:         agentConfig.RetryAttempts,
+		AttemptsInterval: agentConfig.RetryInterval,
+		SigningKey:       agentConfig.SigningKey,
+	}
 	mc := newMetricsCollector()
 	mw := newMetricsWriter(agentConfig.Address, writerConfig)
 
-	ch := make(chan *[]model.Metrics, agentConfig.RateLimit)
+	ch := make(chan *CollectedMetrics, agentConfig.RateLimit)
 
 	agent := &MetricsAgent{writer: mw, collector: mc, config: agentConfig, ch: ch}
-	return agent
+	return agent, nil
 }
 
 func (agent *MetricsAgent) collectMetrics() {
@@ -48,28 +56,41 @@ func (agent *MetricsAgent) collectMetrics() {
 
 func (agent *MetricsAgent) writeMetrics() {
 	logger.Info("Agent started write metrics task")
-	writer := agent.writer
-	collector := agent.collector
 
 	var wg sync.WaitGroup
 	numWorkers := int(agent.config.RateLimit)
 
 	for i := 1; i <= numWorkers; i++ {
 		wg.Add(1)
+
 		go func(worker int) {
 			defer wg.Done()
-			for metrics := range agent.ch {
-				logger.Debug("Start write metrics", "worker", worker)
-				err := writer.Write(*metrics)
-				if err != nil {
-					logger.Error("Failed write metrics", "worker", worker, err)
-				} else {
-					collector.Reset()
-					logger.Debug("Complete write metrics", "worker", worker)
-				}
-			}
+			agent.runWriteMetricsWorker(worker)
 		}(i)
 	}
 
 	wg.Wait()
+}
+
+func (agent *MetricsAgent) runWriteMetricsWorker(worker int) {
+	writer := agent.writer
+	collector := agent.collector
+
+	for collectedMetrics := range agent.ch {
+		logger.Debug("Start write metrics", "worker", worker)
+
+		metrics := collectedMetrics.metrics
+		pollCount := collectedMetrics.pollCount
+
+		collector.addValueToPollCount(-pollCount)
+
+		err := writer.Write(metrics)
+
+		if err != nil {
+			logger.Error("Failed write metrics", "worker", worker, err)
+			collector.addValueToPollCount(pollCount)
+		} else {
+			logger.Debug("Complete write metrics", "worker", worker)
+		}
+	}
 }

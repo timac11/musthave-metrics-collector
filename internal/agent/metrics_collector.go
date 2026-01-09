@@ -13,16 +13,23 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
+type CollectedMetrics struct {
+	metrics   []model.Metrics
+	pollCount int64
+}
+
 type MetricsCollector struct {
 	pollCount atomic.Int64
 }
 
-func (mc *MetricsCollector) Collect() []model.Metrics {
+func (mc *MetricsCollector) Collect() CollectedMetrics {
 	memsMetrics := mc.collectRuntimeMemsMetrics()
-	additionalMetrics := mc.collectAdditionalMetrics()
+	additionalMetrics, pollCount := mc.collectAdditionalMetrics()
 	usageMetrics := mc.collectUsageMemsMetrics()
 
-	return slices.Concat(memsMetrics, additionalMetrics, usageMetrics)
+	metrics := slices.Concat(memsMetrics, additionalMetrics, usageMetrics)
+
+	return CollectedMetrics{metrics: metrics, pollCount: pollCount}
 }
 
 func (mc *MetricsCollector) Reset() {
@@ -98,7 +105,7 @@ func (mc *MetricsCollector) collectUsageMemsMetrics() []model.Metrics {
 	return metrics
 }
 
-func (mc *MetricsCollector) collectAdditionalMetrics() []model.Metrics {
+func (mc *MetricsCollector) collectAdditionalMetrics() ([]model.Metrics, int64) {
 	mc.pollCount.Add(1)
 	pollCount := int64(mc.pollCount.Load())
 	randomValue := rand.Float64()
@@ -108,7 +115,11 @@ func (mc *MetricsCollector) collectAdditionalMetrics() []model.Metrics {
 		{ID: "RandomValue", MType: model.Gauge, Value: &randomValue},
 	}
 
-	return metrics
+	return metrics, pollCount
+}
+
+func (mc *MetricsCollector) addValueToPollCount(value int64) {
+	mc.pollCount.Add(value)
 }
 
 func newMetricsCollector() *MetricsCollector {

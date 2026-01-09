@@ -9,14 +9,14 @@ import (
 )
 
 func main() {
-	flags, err := config.InitAgentConfig()
+	flags := config.InitAgentConfig()
+	logger.Initialize("INFO")
+
+	metricsAgent, err := agent.NewMetricsAgent(flags)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	logger.Initialize("INFO")
-
-	metricsAgent := agent.NewMetricsAgent(flags)
 	metricsAgent.Start()
 }
