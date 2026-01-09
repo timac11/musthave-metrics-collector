@@ -1,6 +1,8 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/handler"
@@ -9,7 +11,6 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/repository/db"
 	"github.com/timac11/musthave-metrics-collector/internal/repository/memory"
 	"github.com/timac11/musthave-metrics-collector/internal/service"
-	"net/http"
 )
 
 func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
@@ -31,17 +32,25 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 	}
 
 	handlers := handler.NewApplicationAPIContainer(*serviceInstance)
+	router := chi.NewRouter()
+	m := middleware.NewMiddleware(serverConfig.SigningKey)
 
-	m := middleware.NewMiddleware()
+	// setup middlewares
 	middlewares := []func(http.Handler) http.Handler{
 		m.GzipMiddleware,
 		m.RequestLoggerMiddleware,
 	}
-
-	router := chi.NewRouter()
-	// setup middlewares
 	router.Use(middlewares...)
 
+	if serverConfig.SigningKey != "" {
+		hashMiddleware := []func(http.Handler) http.Handler{
+			m.CheckSignatureMiddleware,
+			m.SetSignatureMiddleware,
+		}
+		router.Use(hashMiddleware...)
+	}
+
+	// setup routes
 	router.Post("/update", handlers.UpdateMetricV2)
 	router.Post("/update/", handlers.UpdateMetricV2)
 	router.Post("/updates", handlers.UpdateMetrics)

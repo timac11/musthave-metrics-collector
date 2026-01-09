@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/go-resty/resty/v2"
 
+	"github.com/timac11/musthave-metrics-collector/internal/common/util"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
@@ -16,6 +18,7 @@ import (
 type MetricsWriterConfig struct {
 	Attempts         uint
 	AttemptsInterval uint
+	SigningKey       string
 }
 
 type MetricsWriter struct {
@@ -23,50 +26,71 @@ type MetricsWriter struct {
 	config MetricsWriterConfig
 }
 
-func (mw *MetricsWriter) Write(metrics []model.Metrics) {
+func (mw *MetricsWriter) Write(metrics []model.Metrics) error {
 	var res *resty.Response
 	var err error
 
+	signature, err := util.CalculateSignuture(metrics, mw.config.SigningKey)
+
+	if err != nil {
+		return err
+	}
+
 	err = retry.Do(
 		func() error {
-			res, err = mw.client.R().SetBody(metrics).Post("/updates")
+			res, err = mw.client.R().SetBody(metrics).SetHeader("HashSHA256", signature).Post("/updates")
 			return err
 		},
 		mw.getRetryOptions()...,
 	)
 
 	if err != nil {
-		logger.Error("Failed to write metrics", err.Error())
-		return
+		return err
 	}
 
 	if res.StatusCode() != http.StatusOK {
-		logger.Error("Failed to write metrics", "status", res.StatusCode())
-		return
+		return fmt.Errorf("failed to write metrics, status = %d", res.StatusCode())
 	}
 
 	logger.Info("Success updated metrics", "status", res.Status())
+	return nil
 }
 
-func (mw *MetricsWriter) writeMetric(metric model.Metrics) {
+func (mw *MetricsWriter) writeMetric(metric model.Metrics) error {
 	var res *resty.Response
 	var err error
+	signature, err := util.CalculateSignuture(metric, mw.config.SigningKey)
+
+	if err != nil {
+		logger.Error("Failed to calculate signature", err.Error())
+		return err
+	}
 
 	err = retry.Do(
 		func() error {
-			res, err = mw.client.R().SetBody(metric).Post("/update")
+			res, err = mw.client.R().SetBody(metric).SetHeader("HashSHA256", signature).Post("/update")
 			return err
 		},
 		mw.getRetryOptions()...,
 	)
 
 	if err != nil {
-		logger.Error("Failed to write metric", "id", metric.ID, "type", metric.MType)
-		logger.Error(err.Error())
-		return
+		logger.Error("Failed to write metric", "id", metric.ID, "type", metric.MType, err.Error())
+		return err
 	}
 
 	logger.Info("Success update metric", "metric ID", metric.ID, "status", res.Status())
+	return nil
+}
+
+func (mw *MetricsWriter) getRetryOptions() []retry.Option {
+	return []retry.Option{
+		retry.Attempts(mw.config.Attempts),
+		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+			return time.Second + time.Duration(n*mw.config.AttemptsInterval)*time.Second
+		}),
+		retry.Context(context.Background()),
+	}
 }
 
 func newMetricsWriter(url string, config MetricsWriterConfig) *MetricsWriter {
@@ -84,14 +108,4 @@ func newMetricsWriter(url string, config MetricsWriterConfig) *MetricsWriter {
 	}
 
 	return mw
-}
-
-func (mw *MetricsWriter) getRetryOptions() []retry.Option {
-	return []retry.Option{
-		retry.Attempts(mw.config.Attempts),
-		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
-			return time.Second + time.Duration(n*mw.config.AttemptsInterval)*time.Second
-		}),
-		retry.Context(context.Background()),
-	}
 }

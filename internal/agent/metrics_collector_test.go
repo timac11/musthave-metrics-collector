@@ -20,7 +20,7 @@ var memsMetrics = []string{
 func TestCollectMemsMetrics(t *testing.T) {
 	t.Run("should collect all runtime memory metrics", func(t *testing.T) {
 		mc := newMetricsCollector()
-		metrics := mc.collectMemsMetrics()
+		metrics := mc.collectRuntimeMemsMetrics()
 
 		metricsMap := buildMetricMap(metrics)
 
@@ -43,7 +43,7 @@ func TestCollectMemsMetrics(t *testing.T) {
 func TestCollectAdditionalMetrics(t *testing.T) {
 	t.Run("should collect PollCount and RandomValue metrics", func(t *testing.T) {
 		mc := newMetricsCollector()
-		metrics := mc.collectAdditionalMetrics()
+		metrics, pollCount := mc.collectAdditionalMetrics()
 		metricsMap := buildMetricMap(metrics)
 
 		require.Len(t, metrics, 2, "Should return only 2 random metrics")
@@ -53,6 +53,7 @@ func TestCollectAdditionalMetrics(t *testing.T) {
 		assert.Equal(t, model.Counter, pollCountMetric.MType)
 		assert.NotNil(t, pollCountMetric.Delta)
 		assert.Equal(t, int64(1), *pollCountMetric.Delta)
+		assert.Equal(t, pollCount, *pollCountMetric.Delta)
 
 		// Test RandomValue metric
 		randomValueMetric := metricsMap["RandomValue"]
@@ -65,10 +66,10 @@ func TestCollectAdditionalMetrics(t *testing.T) {
 func TestIntegration(t *testing.T) {
 	t.Run("all metrics should have unique IDs", func(t *testing.T) {
 		mc := newMetricsCollector()
-		metrics := mc.Collect()
+		collectedValue := mc.Collect()
 
 		ids := make(map[string]bool)
-		for _, metric := range metrics {
+		for _, metric := range collectedValue.metrics {
 			assert.False(t, ids[metric.ID], "Duplicate metric ID found: %s", metric.ID)
 			ids[metric.ID] = true
 		}
@@ -76,9 +77,9 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("metrics should have correct types", func(t *testing.T) {
 		mc := newMetricsCollector()
-		metrics := mc.Collect()
+		collectedValue := mc.Collect()
 
-		for _, metric := range metrics {
+		for _, metric := range collectedValue.metrics {
 			switch metric.ID {
 			case "PollCount":
 				assert.Equal(t, model.Counter, metric.MType,

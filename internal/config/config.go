@@ -9,27 +9,37 @@ type AgentConfig struct {
 	Address        string `env:"ADDRESS"`
 	ReportInterval int    `env:"REPORT_INTERVAL"`
 	PollInterval   int    `env:"POLL_INTERVAL"`
+	SigningKey     string `env:"KEY"`
+	RateLimit      uint   `env:"RATE_LIMIT"`
 	RetryAttempts  uint
 	RetryInterval  uint
 }
 
 func InitAgentConfig() *AgentConfig {
-	envConfig := initAgentEnv()
-	flagsConfig := initAgentFlags()
+	agentEnv := initAgentEnv()
+	agentFlags := initAgentFlags()
 
-	if envConfig.Address == "" {
-		envConfig.Address = flagsConfig.Address
+	if agentEnv.Address == "" {
+		agentEnv.Address = agentFlags.Address
 	}
 
-	if envConfig.PollInterval == 0 {
-		envConfig.PollInterval = flagsConfig.PollInterval
+	if agentEnv.PollInterval == 0 {
+		agentEnv.PollInterval = agentFlags.PollInterval
 	}
 
-	if envConfig.ReportInterval == 0 {
-		envConfig.ReportInterval = flagsConfig.ReportInterval
+	if agentEnv.ReportInterval == 0 {
+		agentEnv.ReportInterval = agentFlags.ReportInterval
 	}
 
-	return envConfig
+	if agentEnv.RateLimit == 0 {
+		agentEnv.RateLimit = agentFlags.RateLimit
+	}
+
+	if agentEnv.SigningKey == "" {
+		agentEnv.SigningKey = agentFlags.SigningKey
+	}
+
+	return agentEnv
 }
 
 func initAgentFlags() *AgentConfig {
@@ -40,6 +50,9 @@ func initAgentFlags() *AgentConfig {
 	pflag.IntVarP(&agentFlags.PollInterval, "pollInterval", "p", 2, "Wait interval in seconds before reading system metrics")
 	pflag.UintVar(&agentFlags.RetryAttempts, "retryAttempt", 3, "Count of retry attempts to execute metrics operation")
 	pflag.UintVar(&agentFlags.RetryInterval, "retryInterval", 2, "Interval in seconds between metric operation attempts")
+	pflag.UintVarP(&agentFlags.RateLimit, "rateLimit", "l", 1, "Count of workers")
+
+	pflag.StringVarP(&agentFlags.SigningKey, "signingKey", "k", "", "Signing key")
 
 	pflag.Parse()
 
@@ -59,6 +72,7 @@ type ServerConfig struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	Restore         bool   `env:"RESTORE"`
 	DatabaseDsn     string `env:"DATABASE_DSN"`
+	SigningKey      string `env:"KEY"`
 	RetryAttempts   uint
 	RetryInterval   uint
 }
@@ -77,6 +91,10 @@ func InitServerConfig() *ServerConfig {
 
 	if serverEnv.DatabaseDsn == "" {
 		serverEnv.DatabaseDsn = serverFlags.DatabaseDsn
+	}
+
+	if serverEnv.SigningKey == "" {
+		serverEnv.SigningKey = serverFlags.SigningKey
 	}
 
 	if !serverEnv.Restore {
@@ -106,6 +124,7 @@ func initServerFlags() *ServerConfig {
 	pflag.BoolVarP(&serverFlags.Restore, "restore", "r", true, "Restore or not metrics from file storage")
 	pflag.UintVar(&serverFlags.RetryAttempts, "retryAttempt", 3, "Count of retry attempts to execute metrics operation")
 	pflag.UintVar(&serverFlags.RetryInterval, "retryInterval", 2, "Interval in seconds between metric operation attempts")
+	pflag.StringVarP(&serverFlags.SigningKey, "signingKey", "k", "", "Signing key")
 
 	pflag.Parse()
 

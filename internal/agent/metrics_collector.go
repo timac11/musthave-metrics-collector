@@ -3,26 +3,40 @@ package agent
 import (
 	"math/rand"
 	"runtime"
+	"slices"
+	"sync/atomic"
+	"time"
 
 	"github.com/timac11/musthave-metrics-collector/internal/model"
+
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
-type MetricsCollector struct {
+type CollectedMetrics struct {
+	metrics   []model.Metrics
 	pollCount int64
 }
 
-func (mc *MetricsCollector) Collect() []model.Metrics {
-	memsMetrics := mc.collectMemsMetrics()
-	additionalMetrics := mc.collectAdditionalMetrics()
+type MetricsCollector struct {
+	pollCount atomic.Int64
+}
 
-	return append(memsMetrics, additionalMetrics...)
+func (mc *MetricsCollector) Collect() CollectedMetrics {
+	memsMetrics := mc.collectRuntimeMemsMetrics()
+	additionalMetrics, pollCount := mc.collectAdditionalMetrics()
+	usageMetrics := mc.collectUsageMemsMetrics()
+
+	metrics := slices.Concat(memsMetrics, additionalMetrics, usageMetrics)
+
+	return CollectedMetrics{metrics: metrics, pollCount: pollCount}
 }
 
 func (mc *MetricsCollector) Reset() {
-	mc.pollCount = 0
+	mc.pollCount.Store(0)
 }
 
-func (mc *MetricsCollector) collectMemsMetrics() []model.Metrics {
+func (mc *MetricsCollector) collectRuntimeMemsMetrics() []model.Metrics {
 	var stats runtime.MemStats
 	runtime.ReadMemStats(&stats)
 	metricsMap := make(map[string]float64)
@@ -64,9 +78,36 @@ func (mc *MetricsCollector) collectMemsMetrics() []model.Metrics {
 	return metrics
 }
 
-func (mc *MetricsCollector) collectAdditionalMetrics() []model.Metrics {
-	mc.pollCount += 1
-	pollCount := int64(mc.pollCount)
+func (mc *MetricsCollector) collectUsageMemsMetrics() []model.Metrics {
+	metrics := []model.Metrics{}
+	vmStat, err := mem.VirtualMemory()
+
+	if err == nil {
+		total := float64(vmStat.Total)
+		free := float64(vmStat.Free)
+
+		freeMetrics := []model.Metrics{
+			{ID: "TotalMemory", Value: &total, MType: model.Gauge},
+			{ID: "FreeMemory", Value: &free, MType: model.Gauge},
+		}
+
+		metrics = append(metrics, freeMetrics...)
+	}
+
+	percent, err := cpu.Percent(time.Millisecond, false)
+
+	if err == nil {
+		metrics = append(metrics, model.Metrics{
+			ID: "CPUutilization1", Value: &percent[0], MType: model.Gauge,
+		})
+	}
+
+	return metrics
+}
+
+func (mc *MetricsCollector) collectAdditionalMetrics() ([]model.Metrics, int64) {
+	mc.pollCount.Add(1)
+	pollCount := int64(mc.pollCount.Load())
 	randomValue := rand.Float64()
 
 	metrics := []model.Metrics{
@@ -74,10 +115,14 @@ func (mc *MetricsCollector) collectAdditionalMetrics() []model.Metrics {
 		{ID: "RandomValue", MType: model.Gauge, Value: &randomValue},
 	}
 
-	return metrics
+	return metrics, pollCount
+}
+
+func (mc *MetricsCollector) addValueToPollCount(value int64) {
+	mc.pollCount.Add(value)
 }
 
 func newMetricsCollector() *MetricsCollector {
-	mc := &MetricsCollector{pollCount: 0}
+	mc := &MetricsCollector{pollCount: atomic.Int64{}}
 	return mc
 }
