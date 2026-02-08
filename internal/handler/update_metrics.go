@@ -16,7 +16,7 @@ func (container *ApplicationAPIContainer) UpdateMetrics(res http.ResponseWriter,
 		return
 	}
 
-	err := container.service.SaveAll(*metrics)
+	err := container.service.SaveAll(metrics)
 
 	if err != nil {
 		logger.Error("Internal server error", err.Error())
@@ -28,8 +28,8 @@ func (container *ApplicationAPIContainer) UpdateMetrics(res http.ResponseWriter,
 	res.WriteHeader(http.StatusOK)
 }
 
-func parseMetrics(req *http.Request) (*[]model.Metrics, *model.ValidationErr) {
-	var metrics []model.Metrics
+func parseMetrics(req *http.Request) ([]*model.Metrics, *model.ValidationErr) {
+	var metrics []*model.Metrics
 
 	err := json.NewDecoder(req.Body).Decode(&metrics)
 
@@ -51,5 +51,5 @@ func parseMetrics(req *http.Request) (*[]model.Metrics, *model.ValidationErr) {
 		}
 	}
 
-	return &metrics, nil
+	return metrics, nil
 }

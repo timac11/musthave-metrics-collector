@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,13 +19,16 @@ func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, 
 		return
 	}
 
-	err := container.service.Save(*metric)
+	err := container.service.Save(metric)
 
 	if err != nil {
 		logger.Error("Internal server error", err.Error())
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	ip, _, _ := net.SplitHostPort(req.RemoteAddr)
+	container.auditor.Collect([]*model.Metrics{metric}, ip)
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
@@ -41,7 +45,7 @@ func (container *ApplicationAPIContainer) UpdateMetricV2(res http.ResponseWriter
 
 	logger.Info("Update metric params", metric.ID, metric.MType, metric.Value)
 
-	err := container.service.Save(*metric)
+	err := container.service.Save(metric)
 
 	if err != nil {
 		logger.Error("Internal server error", err.Error())

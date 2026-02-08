@@ -16,7 +16,7 @@ func NewPersistentStorage(path string) *FileStorage {
 	return &fileStorage
 }
 
-func (fs *FileStorage) Store(value map[string]model.Metrics) error {
+func (fs *FileStorage) Store(value map[string]*model.Metrics) error {
 	logger.Info("Start backup data to file")
 
 	file, err := os.OpenFile(fs.path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
@@ -39,7 +39,7 @@ func (fs *FileStorage) Store(value map[string]model.Metrics) error {
 	return nil
 }
 
-func (fs *FileStorage) Restore() (map[string]model.Metrics, error) {
+func (fs *FileStorage) Restore() (map[string]*model.Metrics, error) {
 	data, err := os.ReadFile(fs.path)
 
 	if err != nil {
@@ -47,7 +47,7 @@ func (fs *FileStorage) Restore() (map[string]model.Metrics, error) {
 		return nil, err
 	}
 
-	var value map[string]model.Metrics
+	var value map[string]*model.Metrics
 	err = json.Unmarshal(data, &value)
 
 	if err != nil {

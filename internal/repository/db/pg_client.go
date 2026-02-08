@@ -45,7 +45,7 @@ func (client *PgClient) Ping(ctx context.Context) error {
 	return client.conn.PingContext(ctx)
 }
 
-func (client *PgClient) Save(ctx context.Context, metric model.Metrics) error {
+func (client *PgClient) Save(ctx context.Context, metric *model.Metrics) error {
 	query := `
     INSERT INTO metrics (name, mtype, delta, value, hash)
     VALUES ($1, $2, $3, $4, $5)
@@ -98,7 +98,7 @@ func (client *PgClient) Get(ctx context.Context, id string, mType string) (*mode
 	return &metric, nil
 }
 
-func (client *PgClient) SaveAll(ctx context.Context, metrics []model.Metrics) error {
+func (client *PgClient) SaveAll(ctx context.Context, metrics []*model.Metrics) error {
 	if len(metrics) == 0 {
 		return nil
 	}
@@ -161,7 +161,7 @@ func (client *PgClient) SaveAll(ctx context.Context, metrics []model.Metrics) er
 	return nil
 }
 
-func (client *PgClient) GetAll(ctx context.Context) ([]model.Metrics, error) {
+func (client *PgClient) GetAll(ctx context.Context) ([]*model.Metrics, error) {
 	err := client.Ping(ctx)
 	if err != nil {
 		return nil, err
@@ -179,7 +179,7 @@ func (client *PgClient) GetAll(ctx context.Context) ([]model.Metrics, error) {
 	}
 	defer rows.Close()
 
-	var metrics []model.Metrics
+	var metrics []*model.Metrics
 	for rows.Next() {
 		var metric model.Metrics
 
@@ -195,7 +195,7 @@ func (client *PgClient) GetAll(ctx context.Context) ([]model.Metrics, error) {
 			return nil, err
 		}
 
-		metrics = append(metrics, metric)
+		metrics = append(metrics, &metric)
 	}
 
 	if rows.Err() != nil {

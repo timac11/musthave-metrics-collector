@@ -4,16 +4,18 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/timac11/musthave-metrics-collector/internal/audit"
 	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/handler"
 	"github.com/timac11/musthave-metrics-collector/internal/handler/middleware"
-	"github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
-	"github.com/timac11/musthave-metrics-collector/internal/repository/db"
-	"github.com/timac11/musthave-metrics-collector/internal/repository/memory"
+	persistentstorage "github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
+	dbstorage "github.com/timac11/musthave-metrics-collector/internal/repository/db"
+	memorystorage "github.com/timac11/musthave-metrics-collector/internal/repository/memory"
 	"github.com/timac11/musthave-metrics-collector/internal/service"
 )
 
 func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
+	// init service instance
 	var serviceInstance *service.Service
 	serviceConfig := service.ServiceConfig{Attempts: serverConfig.RetryAttempts, AttemptsInterval: serverConfig.RetryInterval}
 
@@ -31,7 +33,10 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 		serviceInstance = service.NewService(memStorage, serviceConfig)
 	}
 
-	handlers := handler.NewApplicationAPIContainer(*serviceInstance)
+	// init auditors instance
+	auditor := audit.NewAuditor(serverConfig.AuditFile, serverConfig.AuditUrl)
+
+	handlers := handler.NewApplicationAPIContainer(*serviceInstance, *auditor)
 	router := chi.NewRouter()
 	m := middleware.NewMiddleware(serverConfig.SigningKey)
 

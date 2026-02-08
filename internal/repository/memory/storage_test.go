@@ -34,7 +34,7 @@ func TestSaveMetricToStorage(t *testing.T) {
 			persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
 			storage := NewMemStorage(persistentStorage, false)
 
-			storage.Save(context.Background(), test)
+			storage.Save(context.Background(), &test)
 			savedMetric, _ := storage.Get(context.Background(), test.ID, test.MType)
 
 			assert.Equal(t, savedMetric.ID, test.ID)
@@ -51,7 +51,7 @@ func TestUpdatMetricInStorage(t *testing.T) {
 	firstValue := float64(123.456)
 	secondValue := float64(567)
 
-	metric := model.Metrics{
+	metric := &model.Metrics{
 		ID:    "first",
 		MType: model.Gauge,
 		Value: &firstValue,
@@ -95,7 +95,7 @@ func TestBackupInStorage(t *testing.T) {
 
 	value := float64(123.456)
 
-	metric := model.Metrics{
+	metric := &model.Metrics{
 		ID:    "first",
 		MType: model.Gauge,
 		Value: &value,
@@ -122,7 +122,7 @@ func TestBackupInStorage(t *testing.T) {
 
 func TestRestoreInStorage(t *testing.T) {
 	value := float64(123.456)
-	metric := model.Metrics{
+	metric := &model.Metrics{
 		ID:    "first",
 		MType: model.Gauge,
 		Value: &value,
@@ -134,7 +134,7 @@ func TestRestoreInStorage(t *testing.T) {
 	assert.Nil(t, err)
 
 	// create mems map and save to file
-	memsMap := make(map[string]model.Metrics)
+	memsMap := make(map[string]*model.Metrics)
 
 	memsMap[buildMetricHash(metric)] = metric
 

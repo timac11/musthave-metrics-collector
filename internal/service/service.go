@@ -14,16 +14,18 @@ import (
 )
 
 type Repository interface {
-	Save(ctx context.Context, value model.Metrics) error
+	Save(ctx context.Context, value *model.Metrics) error
 	Get(ctx context.Context, id string, mType string) (*model.Metrics, error)
-	GetAll(ctx context.Context) ([]model.Metrics, error)
-	SaveAll(ctx context.Context, metrics []model.Metrics) error
+	GetAll(ctx context.Context) ([]*model.Metrics, error)
+	SaveAll(ctx context.Context, metrics []*model.Metrics) error
 	Ping(ctx context.Context) error
 }
 
 type ServiceConfig struct {
 	Attempts         uint
 	AttemptsInterval uint
+	AuditLogsFile    string
+	AuditLogsUrl     string
 }
 
 type Service struct {
@@ -44,7 +46,7 @@ func (service *Service) DBPing() error {
 	return service.storage.Ping(context.Background())
 }
 
-func (service *Service) Save(metric model.Metrics) error {
+func (service *Service) Save(metric *model.Metrics) error {
 	return retry.Do(
 		func() error {
 			storage := service.storage
@@ -54,7 +56,7 @@ func (service *Service) Save(metric model.Metrics) error {
 	)
 }
 
-func (service *Service) SaveAll(metrics []model.Metrics) error {
+func (service *Service) SaveAll(metrics []*model.Metrics) error {
 	deduplicated := make(map[string]*model.Metrics)
 
 	for _, metric := range metrics {
@@ -64,14 +66,14 @@ func (service *Service) SaveAll(metrics []model.Metrics) error {
 			val := *existed.Delta + *metric.Delta
 			existed.Delta = &val
 		} else {
-			deduplicated[key] = &metric
+			deduplicated[key] = metric
 		}
 	}
 
-	uniqueMetrics := make([]model.Metrics, 0, len(deduplicated))
+	uniqueMetrics := make([]*model.Metrics, 0, len(deduplicated))
 
 	for _, metric := range deduplicated {
-		uniqueMetrics = append(uniqueMetrics, *metric)
+		uniqueMetrics = append(uniqueMetrics, metric)
 	}
 
 	return retry.Do(
@@ -99,8 +101,8 @@ func (service *Service) Get(id string, mType string) (*model.Metrics, error) {
 	return metric, err
 }
 
-func (service *Service) GetAll() ([]model.Metrics, error) {
-	var metrics []model.Metrics
+func (service *Service) GetAll() ([]*model.Metrics, error) {
+	var metrics []*model.Metrics
 	var err error
 
 	err = retry.Do(
