@@ -1,15 +1,16 @@
 package audit
 
 import (
-	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"time"
+
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 type Auditor struct {
 	publisher *AuditLogsPublisher
 }
 
-func NewAuditor(auditsPath string, auditsUrl string) *Auditor {
+func NewAuditor(auditsPath string, auditsURL string) *Auditor {
 	publisher := NewAuditLogsPublisher()
 
 	if auditsPath != "" {
@@ -17,8 +18,8 @@ func NewAuditor(auditsPath string, auditsUrl string) *Auditor {
 		publisher.Register(fileWriter)
 	}
 
-	if auditsUrl != "" {
-		serverSender := NewAuditLogServerSender(auditsUrl)
+	if auditsURL != "" {
+		serverSender := NewAuditLogServerSender(auditsURL)
 		publisher.Register(serverSender)
 	}
 
@@ -32,7 +33,7 @@ func (auditor *Auditor) Collect(metrics []*model.Metrics, ipAddress string) {
 		metricNames[i] = metrics[i].MType
 	}
 
-	log := model.AuditLog{Ts: now, Metrics: metricNames, IpAddress: ipAddress}
+	log := model.AuditLog{TS: now, Metrics: metricNames, IPAddress: ipAddress}
 
 	go auditor.publisher.Publish(&log)
 }

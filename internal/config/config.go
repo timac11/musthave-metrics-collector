@@ -74,7 +74,7 @@ type ServerConfig struct {
 	DatabaseDsn     string `env:"DATABASE_DSN"`
 	SigningKey      string `env:"KEY"`
 	AuditFile       string `env:"AUDIT_FILE"`
-	AuditUrl        string `env:"AUDIT_URL"`
+	AuditURL        string `env:"AUDIT_URL"`
 	RetryAttempts   uint
 	RetryInterval   uint
 }
@@ -99,8 +99,8 @@ func InitServerConfig() *ServerConfig {
 		serverEnv.AuditFile = serverFlags.AuditFile
 	}
 
-	if serverEnv.AuditUrl == "" {
-		serverEnv.AuditUrl = serverFlags.AuditUrl
+	if serverEnv.AuditURL == "" {
+		serverEnv.AuditURL = serverFlags.AuditURL
 	}
 
 	if serverEnv.SigningKey == "" {
@@ -136,7 +136,7 @@ func initServerFlags() *ServerConfig {
 	pflag.UintVar(&serverFlags.RetryInterval, "retry-interval", 2, "Interval in seconds between metric operation attempts")
 	pflag.StringVarP(&serverFlags.SigningKey, "signing-key", "k", "", "Signing key")
 	pflag.StringVar(&serverFlags.AuditFile, "audit-file", "", "File to store audit logs")
-	pflag.StringVar(&serverFlags.AuditUrl, "audit-url", "", "Url to send audit logs")
+	pflag.StringVar(&serverFlags.AuditURL, "audit-url", "", "Url to send audit logs")
 
 	pflag.Parse()
 

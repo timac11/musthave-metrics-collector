@@ -34,7 +34,7 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 	}
 
 	// init auditors instance
-	auditor := audit.NewAuditor(serverConfig.AuditFile, serverConfig.AuditUrl)
+	auditor := audit.NewAuditor(serverConfig.AuditFile, serverConfig.AuditURL)
 
 	handlers := handler.NewApplicationAPIContainer(*serviceInstance, *auditor)
 	router := chi.NewRouter()

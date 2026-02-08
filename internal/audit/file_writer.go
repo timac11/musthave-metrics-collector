@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/timac11/musthave-metrics-collector/internal/model"
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
 )
 
 type AuditLogFileWriter struct {
@@ -23,12 +24,16 @@ func (writer *AuditLogFileWriter) Subscribe(observable *Observable) {
 
 		logs, err := writer.read()
 		if err != nil {
+			logger.Error("Failed to read metrics", err)
 			logs = []*model.AuditLog{}
 		}
 
 		logs = append(logs, observable.value)
 
 		err = writer.write(logs)
+		if err != nil {
+			logger.Error("Failed to write metrics", err)
+		}
 
 		cond.L.Unlock()
 	}

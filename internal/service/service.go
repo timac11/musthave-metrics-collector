@@ -24,8 +24,6 @@ type Repository interface {
 type ServiceConfig struct {
 	Attempts         uint
 	AttemptsInterval uint
-	AuditLogsFile    string
-	AuditLogsUrl     string
 }
 
 type Service struct {
