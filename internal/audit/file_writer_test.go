@@ -27,13 +27,13 @@ func TestPositiveReadWriteWriterScenario(t *testing.T) {
 	err := auditFileWriter.write(&auditLog1)
 	require.NoError(t, err)
 
-	writedLogs, err := auditFileWriter.read()
+	writtenLogs, err := auditFileWriter.read()
 
 	require.NoError(t, err)
-	assert.Equal(t, len(writedLogs), 1)
-	assert.Equal(t, writedLogs[0].TS, auditLog1.TS)
-	assert.Equal(t, writedLogs[0].Metrics[0], auditLog1.Metrics[0])
-	assert.Equal(t, writedLogs[0].IPAddress, auditLog1.IPAddress)
+	assert.Equal(t, len(writtenLogs), 1)
+	assert.Equal(t, writtenLogs[0].TS, auditLog1.TS)
+	assert.Equal(t, writtenLogs[0].Metrics[0], auditLog1.Metrics[0])
+	assert.Equal(t, writtenLogs[0].IPAddress, auditLog1.IPAddress)
 
 	nowTime2 := time.Now().Unix()
 
@@ -44,21 +44,17 @@ func TestPositiveReadWriteWriterScenario(t *testing.T) {
 	}
 
 	err = auditFileWriter.write(&auditLog2)
-	writedLogs, err = auditFileWriter.read()
+	writtenLogs, err = auditFileWriter.read()
 
 	require.NoError(t, err)
+	assert.Equal(t, 2, len(writtenLogs))
+	assert.Equal(t, writtenLogs[0].TS, auditLog1.TS)
+	assert.Equal(t, writtenLogs[0].Metrics[0], auditLog1.Metrics[0])
+	assert.Equal(t, writtenLogs[0].IPAddress, auditLog1.IPAddress)
 
-	require.NoError(t, err)
-
-	assert.Equal(t, 2, len(writedLogs))
-
-	assert.Equal(t, writedLogs[0].TS, auditLog1.TS)
-	assert.Equal(t, writedLogs[0].Metrics[0], auditLog1.Metrics[0])
-	assert.Equal(t, writedLogs[0].IPAddress, auditLog1.IPAddress)
-
-	assert.Equal(t, writedLogs[1].TS, auditLog2.TS)
-	assert.Equal(t, writedLogs[1].Metrics[0], auditLog2.Metrics[0])
-	assert.Equal(t, writedLogs[1].IPAddress, auditLog2.IPAddress)
+	assert.Equal(t, writtenLogs[1].TS, auditLog2.TS)
+	assert.Equal(t, writtenLogs[1].Metrics[0], auditLog2.Metrics[0])
+	assert.Equal(t, writtenLogs[1].IPAddress, auditLog2.IPAddress)
 
 	defer os.Remove(filePath)
 }

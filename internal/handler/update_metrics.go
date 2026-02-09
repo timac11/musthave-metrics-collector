@@ -31,6 +31,8 @@ func (container *ApplicationAPIContainer) UpdateMetrics(res http.ResponseWriter,
 func parseMetrics(req *http.Request) ([]*model.Metrics, *model.ValidationErr) {
 	var metrics []*model.Metrics
 
+	defer req.Body.Close()
+
 	err := json.NewDecoder(req.Body).Decode(&metrics)
 
 	if err != nil {
