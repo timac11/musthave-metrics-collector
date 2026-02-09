@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 type AuditLogFileWriter struct {
@@ -22,15 +22,8 @@ func (writer *AuditLogFileWriter) Subscribe(observable *Observable) {
 		cond.L.Lock()
 		cond.Wait()
 
-		logs, err := writer.read()
-		if err != nil {
-			logger.Error("Failed to read metrics", err)
-			logs = []*model.AuditLog{}
-		}
+		err := writer.write(observable.value)
 
-		logs = append(logs, observable.value)
-
-		err = writer.write(logs)
 		if err != nil {
 			logger.Error("Failed to write metrics", err)
 		}
@@ -54,21 +47,34 @@ func (writer *AuditLogFileWriter) read() ([]*model.AuditLog, error) {
 	return logs, nil
 }
 
-func (writer *AuditLogFileWriter) write(logs []*model.AuditLog) error {
-	file, err := os.OpenFile(writer.path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+func (writer *AuditLogFileWriter) write(log *model.AuditLog) error {
+	file, err := os.OpenFile(writer.path, os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		return err
 	}
 
 	defer file.Close()
 
-	data, err := json.Marshal(&logs)
+	existedLogs, err := writer.read()
+	if err != nil {
+		logger.Error("Failed to read metrics", err)
+		existedLogs = []*model.AuditLog{}
+	}
 
+	existedLogs = append(existedLogs, log)
+
+	data, err := json.Marshal(existedLogs)
 	if err != nil {
 		return err
 	}
 
-	file.Write(data)
+	logger.Error("Info metric", len(existedLogs))
+	logger.Error("Info metric", string(data))
+
+	_, err = file.Write(data)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
