@@ -38,6 +38,6 @@ func (publisher *AuditLogsPublisher) Publish(log *model.AuditLog) {
 	observable.cond.L.Lock()
 	observable.value = log
 
-	publisher.observable.cond.Broadcast()
+	observable.cond.Broadcast()
 	observable.cond.L.Unlock()
 }

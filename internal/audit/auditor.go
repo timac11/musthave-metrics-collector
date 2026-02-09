@@ -35,5 +35,5 @@ func (auditor *Auditor) Collect(metrics []*model.Metrics, ipAddress string) {
 
 	log := model.AuditLog{TS: now, Metrics: metricNames, IPAddress: ipAddress}
 
-	go auditor.publisher.Publish(&log)
+	auditor.publisher.Publish(&log)
 }

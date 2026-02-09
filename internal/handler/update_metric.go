@@ -28,7 +28,7 @@ func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, 
 	}
 
 	ip, _, _ := net.SplitHostPort(req.RemoteAddr)
-	container.auditor.Collect([]*model.Metrics{metric}, ip)
+	go container.auditor.Collect([]*model.Metrics{metric}, ip)
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
