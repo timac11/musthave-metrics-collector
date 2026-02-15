@@ -10,7 +10,7 @@ type Auditor struct {
 	publisher *AuditLogsPublisher
 }
 
-func NewAuditor(auditsPath string, auditsURL string) *Auditor {
+func NewAuditor(auditsPath, auditsURL string) *Auditor {
 	publisher := NewAuditLogsPublisher()
 
 	if auditsPath != "" {
@@ -30,7 +30,7 @@ func (auditor *Auditor) Collect(metrics []*model.Metrics, ipAddress string) {
 	now := time.Now().Unix()
 	metricNames := make([]string, len(metrics))
 	for i := range metrics {
-		metricNames[i] = metrics[i].MType
+		metricNames[i] = metrics[i].ID
 	}
 
 	log := model.AuditLog{TS: now, Metrics: metricNames, IPAddress: ipAddress}

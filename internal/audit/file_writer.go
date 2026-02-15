@@ -17,18 +17,20 @@ func NewAuditLogFileWriter(path string) *AuditLogFileWriter {
 }
 
 func (writer *AuditLogFileWriter) Subscribe(observable *Observable) {
-	for {
-		cond := observable.cond
-		cond.L.Lock()
-		cond.Wait()
+	logger.Info("subscribe to write logs to file")
 
+	for {
+		observable.cond.L.Lock()
+		observable.cond.Wait()
+
+		logger.Info("start write audit logs to file")
 		err := writer.write(observable.value)
 
 		if err != nil {
-			logger.Error("Failed to write metrics", err)
+			logger.Error("failed to write metrics", err)
 		}
 
-		cond.L.Unlock()
+		observable.cond.L.Unlock()
 	}
 }
 

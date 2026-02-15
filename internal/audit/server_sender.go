@@ -31,11 +31,14 @@ func (serverSender *AuditLogServerSender) Subscribe(observable *Observable) {
 		cond.L.Lock()
 		cond.Wait()
 
+		logger.Info("start write audit logs to server")
 		err := serverSender.send(observable.value)
 
 		if err != nil {
 			logger.Error("Failed to write metrics", err)
 		}
+
+		logger.Info("end write audit logs to server")
 
 		cond.L.Unlock()
 	}

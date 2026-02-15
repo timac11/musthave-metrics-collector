@@ -3,6 +3,7 @@ package audit
 import (
 	"sync"
 
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
@@ -34,10 +35,11 @@ func (publisher *AuditLogsPublisher) Register(subscriber Subscriber) {
 }
 
 func (publisher *AuditLogsPublisher) Publish(log *model.AuditLog) {
-	observable := publisher.observable
-	observable.cond.L.Lock()
-	observable.value = log
+	logger.Info("start publish new audit log")
+	publisher.observable.cond.L.Lock()
+	publisher.observable.value = log
 
-	observable.cond.Broadcast()
-	observable.cond.L.Unlock()
+	publisher.observable.cond.Broadcast()
+	publisher.observable.cond.L.Unlock()
+	logger.Info("end publish new audit log")
 }
