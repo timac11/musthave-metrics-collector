@@ -2,12 +2,13 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/timac11/musthave-metrics-collector/internal/logger"
-	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"net"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, req *http.Request) {
@@ -19,7 +20,7 @@ func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, 
 		return
 	}
 
-	err := container.service.Save(metric)
+	err := container.service.Save(req.Context(), metric)
 
 	if err != nil {
 		logger.Error("Internal server error", err.Error())
@@ -45,7 +46,7 @@ func (container *ApplicationAPIContainer) UpdateMetricV2(res http.ResponseWriter
 
 	logger.Info("Update metric params", metric.ID, metric.MType, metric.Value)
 
-	err := container.service.Save(metric)
+	err := container.service.Save(req.Context(), metric)
 
 	if err != nil {
 		logger.Error("Internal server error", err.Error())

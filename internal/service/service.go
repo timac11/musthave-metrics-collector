@@ -44,17 +44,17 @@ func (service *Service) DBPing() error {
 	return service.storage.Ping(context.Background())
 }
 
-func (service *Service) Save(metric *model.Metrics) error {
+func (service *Service) Save(ctx context.Context, metric *model.Metrics) error {
 	return retry.Do(
 		func() error {
 			storage := service.storage
 			return storage.Save(context.Background(), metric)
 		},
-		service.getRetryOptions()...,
+		service.getRetryOptions(ctx)...,
 	)
 }
 
-func (service *Service) SaveAll(metrics []*model.Metrics) error {
+func (service *Service) SaveAll(ctx context.Context, metrics []*model.Metrics) error {
 	deduplicated := make(map[string]*model.Metrics)
 
 	for _, metric := range metrics {
@@ -76,46 +76,45 @@ func (service *Service) SaveAll(metrics []*model.Metrics) error {
 
 	return retry.Do(
 		func() error {
-			storage := service.storage
-			return storage.SaveAll(context.Background(), uniqueMetrics)
+			return service.storage.SaveAll(ctx, uniqueMetrics)
 		},
-		service.getRetryOptions()...,
+		service.getRetryOptions(ctx)...,
 	)
 }
 
-func (service *Service) Get(id string, mType string) (*model.Metrics, error) {
+func (service *Service) Get(ctx context.Context, id string, mType string) (*model.Metrics, error) {
 	var metric *model.Metrics
 	var err error
 
 	err = retry.Do(
 		func() error {
 			storage := service.storage
-			metric, err = storage.Get(context.Background(), id, mType)
+			metric, err = storage.Get(ctx, id, mType)
 			return err
 		},
-		service.getRetryOptions()...,
+		service.getRetryOptions(ctx)...,
 	)
 
 	return metric, err
 }
 
-func (service *Service) GetAll() ([]*model.Metrics, error) {
+func (service *Service) GetAll(ctx context.Context) ([]*model.Metrics, error) {
 	var metrics []*model.Metrics
 	var err error
 
 	err = retry.Do(
 		func() error {
 			storage := service.storage
-			metrics, err = storage.GetAll(context.Background())
+			metrics, err = storage.GetAll(ctx)
 			return err
 		},
-		service.getRetryOptions()...,
+		service.getRetryOptions(ctx)...,
 	)
 
 	return metrics, err
 }
 
-func (service *Service) getRetryOptions() []retry.Option {
+func (service *Service) getRetryOptions(ctx context.Context) []retry.Option {
 	return []retry.Option{
 		retry.RetryIf(func(err error) bool {
 			return service.isRetryableError(err)
@@ -124,7 +123,7 @@ func (service *Service) getRetryOptions() []retry.Option {
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
 			return time.Second + time.Duration(n*service.config.AttemptsInterval)*time.Second
 		}),
-		retry.Context(context.Background()),
+		retry.Context(ctx),
 	}
 }
 

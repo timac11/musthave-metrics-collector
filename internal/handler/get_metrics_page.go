@@ -8,7 +8,7 @@ import (
 )
 
 func (container *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter, req *http.Request) {
-	metrics, err := container.service.GetAll()
+	metrics, err := container.service.GetAll(req.Context())
 
 	if err != nil {
 		http.Error(res, "Internal server error", http.StatusInternalServerError)

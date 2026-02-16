@@ -13,7 +13,7 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 	metricType := chi.URLParam(req, "metricType")
 	metricName := chi.URLParam(req, "metricName")
 
-	metric, err := container.service.Get(metricName, metricType)
+	metric, err := container.service.Get(req.Context(), metricName, metricType)
 
 	if err != nil || metric == nil {
 		res.WriteHeader(http.StatusNotFound)
@@ -45,7 +45,7 @@ func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWri
 
 	logger.Info("Get metric params", metric.ID, metric.MType)
 
-	metricValue, err := container.service.Get(metric.ID, metric.MType)
+	metricValue, err := container.service.Get(req.Context(), metric.ID, metric.MType)
 
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)

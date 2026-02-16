@@ -16,7 +16,7 @@ func (container *ApplicationAPIContainer) UpdateMetrics(res http.ResponseWriter,
 		return
 	}
 
-	err := container.service.SaveAll(metrics)
+	err := container.service.SaveAll(req.Context(), metrics)
 
 	if err != nil {
 		logger.Error("Internal server error", err.Error())

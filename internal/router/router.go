@@ -2,8 +2,11 @@ package router
 
 import (
 	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/go-chi/chi/v5"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
+
 	"github.com/timac11/musthave-metrics-collector/internal/audit"
 	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/handler"
@@ -35,38 +38,43 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 
 	// init auditors instance
 	auditor := audit.NewAuditor(serverConfig.AuditFile, serverConfig.AuditURL)
-
 	handlers := handler.NewApplicationAPIContainer(*serviceInstance, *auditor)
 	router := chi.NewRouter()
-	m := middleware.NewMiddleware(serverConfig.SigningKey)
 
-	// setup middlewares
-	middlewares := []func(http.Handler) http.Handler{
-		m.GzipMiddleware,
-		m.RequestLoggerMiddleware,
-	}
-	router.Use(middlewares...)
+	router.Route("/debug", func(router chi.Router) {
+		router.Mount("/", chimiddleware.Profiler())
+	})
 
-	if serverConfig.SigningKey != "" {
-		hashMiddleware := []func(http.Handler) http.Handler{
-			m.CheckSignatureMiddleware,
-			m.SetSignatureMiddleware,
+	router.Route("/", func(router chi.Router) {
+		m := middleware.NewMiddleware(serverConfig.SigningKey)
+
+		// setup middlewares
+		middlewares := []func(http.Handler) http.Handler{
+			m.GzipMiddleware,
+			m.RequestLoggerMiddleware,
 		}
-		router.Use(hashMiddleware...)
-	}
+		router.Use(middlewares...)
 
-	// setup routes
-	router.Post("/update", handlers.UpdateMetricV2)
-	router.Post("/update/", handlers.UpdateMetricV2)
-	router.Post("/updates", handlers.UpdateMetrics)
-	router.Post("/updates/", handlers.UpdateMetrics)
-	router.Post("/update/{metricType}/{metricName}/{value}", handlers.UpdateMetric)
-	router.Post("/value", handlers.GetFullMetricInfo)
-	router.Post("/value/", handlers.GetFullMetricInfo)
-	router.Get("/value/{metricType}/{metricName}", handlers.GetMetric)
-	router.Get("/ping", handlers.DBPing)
+		if serverConfig.SigningKey != "" {
+			hashMiddleware := []func(http.Handler) http.Handler{
+				m.CheckSignatureMiddleware,
+				m.SetSignatureMiddleware,
+			}
+			router.Use(hashMiddleware...)
+		}
 
-	router.Get(`/`, handlers.GetMetricsPage)
+		// setup routes
+		router.Post("/update", handlers.UpdateMetricV2)
+		router.Post("/update/", handlers.UpdateMetricV2)
+		router.Post("/updates", handlers.UpdateMetrics)
+		router.Post("/updates/", handlers.UpdateMetrics)
+		router.Post("/update/{metricType}/{metricName}/{value}", handlers.UpdateMetric)
+		router.Post("/value", handlers.GetFullMetricInfo)
+		router.Post("/value/", handlers.GetFullMetricInfo)
+		router.Get("/value/{metricType}/{metricName}", handlers.GetMetric)
+		router.Get("/ping", handlers.DBPing)
+		router.Get("/", handlers.GetMetricsPage)
+	})
 
 	return router, nil
 }
