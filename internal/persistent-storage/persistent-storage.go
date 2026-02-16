@@ -2,9 +2,10 @@ package persistentstorage
 
 import (
 	"encoding/json"
+	"os"
+
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"os"
 )
 
 type FileStorage struct {

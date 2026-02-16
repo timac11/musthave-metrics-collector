@@ -35,7 +35,7 @@ func (serverSender *AuditLogServerSender) Subscribe(observable *Observable) {
 		err := serverSender.send(observable.value)
 
 		if err != nil {
-			logger.Error("Failed to write metrics", err)
+			logger.Error("failed to write audit logs to server", err)
 		}
 
 		logger.Info("end write audit logs to server")

@@ -44,6 +44,8 @@ func TestPositiveReadWriteWriterScenario(t *testing.T) {
 	}
 
 	err = auditFileWriter.write(&auditLog2)
+	require.NoError(t, err)
+
 	writtenLogs, err = auditFileWriter.read()
 
 	require.NoError(t, err)

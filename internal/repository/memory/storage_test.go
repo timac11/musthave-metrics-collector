@@ -3,11 +3,12 @@ package memorystorage
 import (
 	"context"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
-	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
+	persistentstorage "github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
 )
 
 func TestSaveMetricToStorage(t *testing.T) {

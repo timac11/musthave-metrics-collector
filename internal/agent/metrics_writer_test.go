@@ -2,12 +2,13 @@ package agent
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/timac11/musthave-metrics-collector/internal/model"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
 var defaultConfig MetricsWriterConfig = MetricsWriterConfig{Attempts: 1, AttemptsInterval: 2}
