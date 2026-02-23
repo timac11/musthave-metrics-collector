@@ -6,6 +6,7 @@ import (
 
 var logger *zap.SugaredLogger = zap.NewNop().Sugar()
 
+// Initialize init private singleton logger in Sugar mode with production config
 func Initialize(level string) error {
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {
