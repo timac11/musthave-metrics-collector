@@ -11,6 +11,9 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
+// UpdateMetric update info about metric
+// params: type, name and value of metric - are URL params
+// url template: /update/{metricType}/{metricName}/{value}
 func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, req *http.Request) {
 	metric, validationRes := parseMetricParams(req)
 

@@ -7,6 +7,7 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 )
 
+// GetMetricsPage returns HTML document with metrics info
 func (container *ApplicationAPIContainer) GetMetricsPage(res http.ResponseWriter, req *http.Request) {
 	metrics, err := container.service.GetAll(req.Context())
 

@@ -10,6 +10,9 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
+// GetMetric return full info about metric by metric id and metric type
+// metricType and metricName - are URL params of the req
+// url template /value/{metricType}/{metricName}
 func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req *http.Request) {
 	metricType := chi.URLParam(req, "metricType")
 	metricName := chi.URLParam(req, "metricName")
@@ -33,6 +36,8 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 	}
 }
 
+// GetFullMetricInfo return full info about metric by metric id and metric type
+// id and type are transmitted in body of req 
 func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWriter, req *http.Request) {
 	var metric model.Metrics
 
