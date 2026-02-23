@@ -52,7 +52,7 @@ func (serverSender *AuditLogServerSender) send(log *model.AuditLog) error {
 	}
 
 	if !response.IsSuccess() {
-		return fmt.Errorf("Failed send metrics audit log, status code: %d", response.StatusCode())
+		return fmt.Errorf("failed send metrics audit log, status code: %d", response.StatusCode())
 	}
 
 	return nil
