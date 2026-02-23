@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-func CalculateSignuture(data any, signingKey string) (string, error) {
+func CalculateSignature(data any, signingKey string) (string, error) {
 	if signingKey == "" {
 		return "", nil
 	}

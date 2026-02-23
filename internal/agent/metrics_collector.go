@@ -13,15 +13,22 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
+// CollectedMetrics is contract for metric collection
+// metrics - is slice of collected runtime metrics
+// pollCount - is the number of measurements taken before sending to server
+// this value is equal to calculate PollCount metric
 type CollectedMetrics struct {
 	metrics   []model.Metrics
 	pollCount int64
 }
 
+// MetricsCollector is structure of metric collector
+// pollCount - is actual number of measurements taken before sending to server
 type MetricsCollector struct {
 	pollCount atomic.Int64
 }
 
+// Collect function get runtime memory metrics, PollCount and RandomValue metrics
 func (mc *MetricsCollector) Collect() CollectedMetrics {
 	memsMetrics := mc.collectRuntimeMemsMetrics()
 	additionalMetrics, pollCount := mc.collectAdditionalMetrics()
@@ -32,6 +39,7 @@ func (mc *MetricsCollector) Collect() CollectedMetrics {
 	return CollectedMetrics{metrics: metrics, pollCount: pollCount}
 }
 
+// Reset pollCount value in collector
 func (mc *MetricsCollector) Reset() {
 	mc.pollCount.Store(0)
 }

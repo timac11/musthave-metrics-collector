@@ -24,7 +24,7 @@ func (m *Middleware) SetSignatureMiddleware(h http.Handler) http.Handler {
 		h.ServeHTTP(recorder, r)
 
 		if m.signingKey != "" {
-			signature, err := util.CalculateSignuture(recorder.body.Bytes(), m.signingKey)
+			signature, err := util.CalculateSignature(recorder.body.Bytes(), m.signingKey)
 
 			if err != nil {
 				logger.Error("Failed to calculate signature", err)
@@ -55,7 +55,7 @@ func (m *Middleware) CheckSignatureMiddleware(h http.Handler) http.Handler {
 			r.Body.Close()
 
 			if len(bodyBytes) != 0 {
-				signature, err := util.CalculateSignuture(bodyBytes, m.signingKey)
+				signature, err := util.CalculateSignature(bodyBytes, m.signingKey)
 
 				if err != nil {
 					logger.Error("Failed to calculate signature", err)

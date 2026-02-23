@@ -15,22 +15,25 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
+// MetricsWriterConfig is the configuration of metric writer
 type MetricsWriterConfig struct {
-	Attempts         uint
-	AttemptsInterval uint
-	SigningKey       string
+	Attempts         uint   // number of attempts to resend metrics
+	AttemptsInterval uint   // parameter for calculation of backoff interval between two attempts. backoff time on i-th iteration is equal ti (i-1) * AttemptsInterval
+	SigningKey       string // used to sign metrics before sending it to the server
 }
 
+// MetricsWriter is structure of writer
 type MetricsWriter struct {
-	client resty.Client
+	client resty.Client // client is used to send metrics to server
 	config MetricsWriterConfig
 }
 
+// Write used to send metrics to server
 func (mw *MetricsWriter) Write(metrics []model.Metrics) error {
 	var res *resty.Response
 	var err error
 
-	signature, err := util.CalculateSignuture(metrics, mw.config.SigningKey)
+	signature, err := util.CalculateSignature(metrics, mw.config.SigningKey)
 
 	if err != nil {
 		return err
@@ -59,7 +62,7 @@ func (mw *MetricsWriter) Write(metrics []model.Metrics) error {
 func (mw *MetricsWriter) writeMetric(metric model.Metrics) error {
 	var res *resty.Response
 	var err error
-	signature, err := util.CalculateSignuture(metric, mw.config.SigningKey)
+	signature, err := util.CalculateSignature(metric, mw.config.SigningKey)
 
 	if err != nil {
 		logger.Error("Failed to calculate signature", err.Error())

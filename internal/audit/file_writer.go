@@ -8,14 +8,18 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
+// AuditLogFileWriter is structure is used to write logs to file
 type AuditLogFileWriter struct {
 	path string
 }
 
+// NewAuditLogFileWriter - return instance of AuditLogFileWriter.  
+// implements interface Subscriber
 func NewAuditLogFileWriter(path string) *AuditLogFileWriter {
 	return &AuditLogFileWriter{path: path}
 }
 
+// Subscribe is called for subscribing on event of writing new audit logs
 func (writer *AuditLogFileWriter) Subscribe(observable *Observable) {
 	logger.Info("subscribe to write logs to file")
 
@@ -59,19 +63,15 @@ func (writer *AuditLogFileWriter) write(log *model.AuditLog) error {
 
 	existedLogs, err := writer.read()
 	if err != nil {
-		logger.Error("Failed to read metrics", err)
 		existedLogs = []*model.AuditLog{}
 	}
 
 	existedLogs = append(existedLogs, log)
-
 	data, err := json.Marshal(existedLogs)
+
 	if err != nil {
 		return err
 	}
-
-	logger.Error("Info metric", len(existedLogs))
-	logger.Error("Info metric", string(data))
 
 	_, err = file.Write(data)
 	if err != nil {
