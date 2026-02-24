@@ -40,10 +40,14 @@ func NewService(storage Repository, config ServiceConfig) *Service {
 	return service
 }
 
+// DBPing check storage availability
 func (service *Service) DBPing() error {
 	return service.storage.Ping(context.Background())
 }
 
+// Save store metric
+// if metric exists than it is updated
+// otherwise metric is created
 func (service *Service) Save(ctx context.Context, metric *model.Metrics) error {
 	return retry.Do(
 		func() error {
@@ -54,6 +58,9 @@ func (service *Service) Save(ctx context.Context, metric *model.Metrics) error {
 	)
 }
 
+// SaveAll store all metrics
+// is some of metric exist in storage it updates with new values
+// otherwise metrics are created
 func (service *Service) SaveAll(ctx context.Context, metrics []*model.Metrics) error {
 	deduplicated := make(map[string]*model.Metrics)
 
@@ -82,6 +89,9 @@ func (service *Service) SaveAll(ctx context.Context, metrics []*model.Metrics) e
 	)
 }
 
+// Get return metric from storage by id and metric type
+// id - is not enough. metric id (metric name) can be the same
+// pair id (name) + mType is unique
 func (service *Service) Get(ctx context.Context, id string, mType string) (*model.Metrics, error) {
 	var metric *model.Metrics
 	var err error
@@ -98,6 +108,7 @@ func (service *Service) Get(ctx context.Context, id string, mType string) (*mode
 	return metric, err
 }
 
+// GetAll return all metrics from storage
 func (service *Service) GetAll(ctx context.Context) ([]*model.Metrics, error) {
 	var metrics []*model.Metrics
 	var err error

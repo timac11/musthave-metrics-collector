@@ -17,6 +17,7 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/service"
 )
 
+// InitRouter return *chi.Mux for metrics server
 func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 	// init service instance
 	var serviceInstance *service.Service
