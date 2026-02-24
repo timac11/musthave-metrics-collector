@@ -23,14 +23,14 @@ func Initialize(level string) error {
 	return nil
 }
 
-func Debug(msg string, params any) {
+func Debug(msg string, params ...any) {
 	logger.Debug(msg, params)
 }
 
-func Info(msg string, params any) {
+func Info(msg string, params ...any) {
 	logger.Info(msg, params)
 }
 
-func Error(msg string, params any) {
+func Error(msg string, params ...any) {
 	logger.Error(msg, params)
 }
