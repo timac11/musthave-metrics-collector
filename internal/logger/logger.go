@@ -1,3 +1,6 @@
+/*
+This packet is used for logging in application
+*/
 package logger
 
 import (

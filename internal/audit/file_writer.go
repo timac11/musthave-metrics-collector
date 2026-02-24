@@ -13,7 +13,7 @@ type AuditLogFileWriter struct {
 	path string
 }
 
-// NewAuditLogFileWriter - return instance of AuditLogFileWriter.  
+// NewAuditLogFileWriter - return instance of AuditLogFileWriter.
 // implements interface Subscriber
 func NewAuditLogFileWriter(path string) *AuditLogFileWriter {
 	return &AuditLogFileWriter{path: path}

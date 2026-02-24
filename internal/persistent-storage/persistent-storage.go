@@ -1,3 +1,8 @@
+/*
+This packet is used to backup and restore metrics.
+A file is used as storage.
+File path is parameter of constructor
+*/
 package persistentstorage
 
 import (
@@ -17,6 +22,7 @@ func NewPersistentStorage(path string) *FileStorage {
 	return &fileStorage
 }
 
+// Store save all metrics to backup storage
 func (fs *FileStorage) Store(value map[string]*model.Metrics) error {
 	logger.Info("Start backup data to file")
 
@@ -40,6 +46,7 @@ func (fs *FileStorage) Store(value map[string]*model.Metrics) error {
 	return nil
 }
 
+// Restore return all metrics from backup storage
 func (fs *FileStorage) Restore() (map[string]*model.Metrics, error) {
 	data, err := os.ReadFile(fs.path)
 

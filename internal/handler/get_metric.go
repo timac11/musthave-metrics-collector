@@ -37,7 +37,7 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 }
 
 // GetFullMetricInfo return full info about metric by metric id and metric type
-// id and type are transmitted in body of req 
+// id and type are transmitted in body of req
 func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWriter, req *http.Request) {
 	var metric model.Metrics
 
