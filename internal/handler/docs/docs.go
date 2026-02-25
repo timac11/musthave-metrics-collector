@@ -21,12 +21,108 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/value": {
+            "post": {
+                "description": "Get metric by ID and type",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "Return metric info",
+                "parameters": [
+                    {
+                        "description": "Metric type",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Metrics"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Metrics"
+                        }
+                    }
+                }
+            }
+        },
+        "/value/{metricType}/{metricName}": {
+            "get": {
+                "description": "Get metric by metricType and metricName",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "Return metric info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Metric type",
+                        "name": "metricType",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Metric name",
+                        "name": "metricName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Metrics"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.Metrics": {
+            "type": "object",
+            "properties": {
+                "delta": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        }
+    }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.0",
+	Version:          "1.0",
 	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},

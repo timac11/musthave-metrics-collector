@@ -1,4 +1,18 @@
 basePath: /
+definitions:
+  model.Metrics:
+    properties:
+      delta:
+        type: integer
+      hash:
+        type: string
+      id:
+        type: string
+      type:
+        type: string
+      value:
+        type: number
+    type: object
 info:
   contact:
     name: API Support
@@ -8,6 +22,54 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
   title: Metrics collector server API
-  version: "2.0"
-paths: {}
+  version: "1.0"
+paths:
+  /value:
+    post:
+      consumes:
+      - application/json
+      description: Get metric by ID and type
+      parameters:
+      - description: Metric type
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.Metrics'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Metrics'
+      summary: Return metric info
+      tags:
+      - Metrics
+  /value/{metricType}/{metricName}:
+    get:
+      consumes:
+      - application/json
+      description: Get metric by metricType and metricName
+      parameters:
+      - description: Metric type
+        in: path
+        name: metricType
+        required: true
+        type: string
+      - description: Metric name
+        in: path
+        name: metricName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Metrics'
+      summary: Return metric info
+      tags:
+      - Metrics
 swagger: "2.0"
