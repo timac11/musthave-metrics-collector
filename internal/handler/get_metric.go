@@ -49,7 +49,7 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 // @Tags         Metrics
 // @Accept       json
 // @Produce      json
-// @Param        body  body  model.Metrics  true  "Metric type"
+// @Param        body  body     model.Metrics  true  "Metric type"
 // @Success      200  {object}  model.Metrics
 // @Router       /value [post]
 func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWriter, req *http.Request) {

@@ -24,6 +24,28 @@ info:
   title: Metrics collector server API
   version: "1.0"
 paths:
+  /update:
+    post:
+      consumes:
+      - application/json
+      description: Update metric V2
+      parameters:
+      - description: Metric type
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.Metrics'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Metrics'
+      summary: Update metric V2
+      tags:
+      - Metrics
   /value:
     post:
       consumes:
@@ -76,7 +98,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update metric
+      description: Update metric V1
       parameters:
       - description: Metric type
         in: path
@@ -100,7 +122,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.Metrics'
-      summary: Update metric
+      summary: Update metric V1
       tags:
       - Metrics
 swagger: "2.0"

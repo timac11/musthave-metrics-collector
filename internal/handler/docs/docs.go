@@ -22,6 +22,40 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/update": {
+            "post": {
+                "description": "Update metric V2",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "Update metric V2",
+                "parameters": [
+                    {
+                        "description": "Metric type",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Metrics"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Metrics"
+                        }
+                    }
+                }
+            }
+        },
         "/value": {
             "post": {
                 "description": "Get metric by ID and type",
@@ -97,7 +131,7 @@ const docTemplate = `{
         },
         "/value/{metricType}/{metricName}/{value}": {
             "post": {
-                "description": "Update metric",
+                "description": "Update metric V1",
                 "consumes": [
                     "application/json"
                 ],
@@ -107,7 +141,7 @@ const docTemplate = `{
                 "tags": [
                     "Metrics"
                 ],
-                "summary": "Update metric",
+                "summary": "Update metric V1",
                 "parameters": [
                     {
                         "type": "string",

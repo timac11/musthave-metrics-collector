@@ -11,7 +11,7 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
-// UpdateMetric godoc
+// UpdateMetric  godoc
 // @Summary      Update metric V1
 // @Description  Update metric V1
 // @Tags         Metrics
@@ -46,6 +46,15 @@ func (container *ApplicationAPIContainer) UpdateMetric(res http.ResponseWriter, 
 	res.WriteHeader(http.StatusOK)
 }
 
+// UpdateMetricV2  godoc
+// @Summary        Update metric V2
+// @Description    Update metric V2
+// @Tags           Metrics
+// @Accept         json
+// @Produce        json
+// @Param          body  body     model.Metrics  true  "Metric type"
+// @Success        200  {object}  model.Metrics
+// @Router         /update [post]
 func (container *ApplicationAPIContainer) UpdateMetricV2(res http.ResponseWriter, req *http.Request) {
 	metric, validationRes := parseMetricParamsV2(req)
 
