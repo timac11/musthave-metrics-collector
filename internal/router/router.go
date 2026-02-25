@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 
@@ -15,9 +16,22 @@ import (
 	dbstorage "github.com/timac11/musthave-metrics-collector/internal/repository/db"
 	memorystorage "github.com/timac11/musthave-metrics-collector/internal/repository/memory"
 	"github.com/timac11/musthave-metrics-collector/internal/service"
+
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+	_ "github.com/timac11/musthave-metrics-collector/internal/handler/docs"
 )
 
-// InitRouter return *chi.Mux for metrics server
+// @title Metrics collector server API
+// @version 1.0
+// @description This is a Metrics collector swagger API.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @BasePath /
 func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 	// init service instance
 	var serviceInstance *service.Service
@@ -76,6 +90,10 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 		router.Get("/ping", handlers.DBPing)
 		router.Get("/", handlers.GetMetricsPage)
 	})
+
+	router.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL(fmt.Sprintf("http://%s%s", serverConfig.Address, "/swagger/doc.json")),
+	))
 
 	return router, nil
 }

@@ -1,0 +1,13 @@
+basePath: /
+info:
+  contact:
+    name: API Support
+  description: This is a Metrics collector swagger API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Metrics collector server API
+  version: "2.0"
+paths: {}
+swagger: "2.0"
