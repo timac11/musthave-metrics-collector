@@ -11,7 +11,7 @@ import (
 )
 
 // GetMetric godoc
-// @Summary      Return metric info 
+// @Summary      Return metric info
 // @Description  Get metric by metricType and metricName
 // @Tags         Metrics
 // @Accept       json
@@ -44,7 +44,7 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 }
 
 // GetFullMetricInfo godoc
-// @Summary      Return metric info 
+// @Summary      Return metric info
 // @Description  Get metric by ID and type
 // @Tags         Metrics
 // @Accept       json

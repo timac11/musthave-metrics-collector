@@ -87,6 +87,52 @@
                     }
                 }
             }
+        },
+        "/value/{metricType}/{metricName}/{value}": {
+            "post": {
+                "description": "Update metric",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "Update metric",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Metric type",
+                        "name": "metricType",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Metric name",
+                        "name": "metricName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Metric value",
+                        "name": "value",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Metrics"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

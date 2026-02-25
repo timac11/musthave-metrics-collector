@@ -72,4 +72,35 @@ paths:
       summary: Return metric info
       tags:
       - Metrics
+  /value/{metricType}/{metricName}/{value}:
+    post:
+      consumes:
+      - application/json
+      description: Update metric
+      parameters:
+      - description: Metric type
+        in: path
+        name: metricType
+        required: true
+        type: string
+      - description: Metric name
+        in: path
+        name: metricName
+        required: true
+        type: string
+      - description: Metric value
+        in: path
+        name: value
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Metrics'
+      summary: Update metric
+      tags:
+      - Metrics
 swagger: "2.0"
