@@ -10,19 +10,19 @@ import (
 )
 
 type PersistentStorage interface {
-	Store(value map[string]model.Metrics) error
-	Restore() (map[string]model.Metrics, error)
+	Store(value map[string]*model.Metrics) error
+	Restore() (map[string]*model.Metrics, error)
 }
 
 type MemStorage struct {
-	storage           map[string]model.Metrics
+	storage           map[string]*model.Metrics
 	mu                *sync.Mutex
 	persistentStorage PersistentStorage
 }
 
 func NewMemStorage(ps PersistentStorage, restore bool) *MemStorage {
 	mu := sync.Mutex{}
-	storage := make(map[string]model.Metrics)
+	storage := make(map[string]*model.Metrics)
 
 	if restore {
 		metrics, err := ps.Restore()
@@ -43,7 +43,7 @@ func NewMemStorage(ps PersistentStorage, restore bool) *MemStorage {
 	return ms
 }
 
-func (ms *MemStorage) Save(ctx context.Context, metric model.Metrics) error {
+func (ms *MemStorage) Save(ctx context.Context, metric *model.Metrics) error {
 	existedMetric, _ := ms.Get(ctx, metric.ID, metric.MType)
 
 	if existedMetric != nil {
@@ -61,7 +61,7 @@ func (ms *MemStorage) Save(ctx context.Context, metric model.Metrics) error {
 	return nil
 }
 
-func (ms *MemStorage) SaveAll(ctx context.Context, metrics []model.Metrics) error {
+func (ms *MemStorage) SaveAll(ctx context.Context, metrics []*model.Metrics) error {
 	for _, metric := range metrics {
 		err := ms.Save(ctx, metric)
 
@@ -82,15 +82,15 @@ func (ms *MemStorage) Get(_ context.Context, id string, mType string) (*model.Me
 	defer ms.mu.Unlock()
 	val, ok := ms.storage[id+"-"+mType]
 	if ok {
-		return &val, nil
+		return val, nil
 	}
 	return nil, errors.New("failed to get metric")
 }
 
-func (ms *MemStorage) GetAll(_ context.Context) ([]model.Metrics, error) {
+func (ms *MemStorage) GetAll(_ context.Context) ([]*model.Metrics, error) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
-	metrics := make([]model.Metrics, 0, len(ms.storage))
+	metrics := make([]*model.Metrics, 0, len(ms.storage))
 
 	for _, v := range ms.storage {
 		metrics = append(metrics, v)
@@ -99,6 +99,6 @@ func (ms *MemStorage) GetAll(_ context.Context) ([]model.Metrics, error) {
 	return metrics, nil
 }
 
-func buildMetricHash(metric model.Metrics) string {
+func buildMetricHash(metric *model.Metrics) string {
 	return metric.ID + "-" + metric.MType
 }

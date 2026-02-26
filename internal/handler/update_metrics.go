@@ -2,9 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"net/http"
 )
 
 func (container *ApplicationAPIContainer) UpdateMetrics(res http.ResponseWriter, req *http.Request) {
@@ -16,7 +17,7 @@ func (container *ApplicationAPIContainer) UpdateMetrics(res http.ResponseWriter,
 		return
 	}
 
-	err := container.service.SaveAll(*metrics)
+	err := container.service.SaveAll(req.Context(), metrics)
 
 	if err != nil {
 		logger.Error("Internal server error", err.Error())
@@ -28,8 +29,10 @@ func (container *ApplicationAPIContainer) UpdateMetrics(res http.ResponseWriter,
 	res.WriteHeader(http.StatusOK)
 }
 
-func parseMetrics(req *http.Request) (*[]model.Metrics, *model.ValidationErr) {
-	var metrics []model.Metrics
+func parseMetrics(req *http.Request) ([]*model.Metrics, *model.ValidationErr) {
+	var metrics []*model.Metrics
+
+	defer req.Body.Close()
 
 	err := json.NewDecoder(req.Body).Decode(&metrics)
 
@@ -51,5 +54,5 @@ func parseMetrics(req *http.Request) (*[]model.Metrics, *model.ValidationErr) {
 		}
 	}
 
-	return &metrics, nil
+	return metrics, nil
 }

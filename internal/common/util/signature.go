@@ -8,7 +8,8 @@ import (
 	"fmt"
 )
 
-func CalculateSignuture(data any, signingKey string) (string, error) {
+// CalculateSignature calculate signature of serializable structure
+func CalculateSignature(data any, signingKey string) (string, error) {
 	if signingKey == "" {
 		return "", nil
 	}

@@ -1,3 +1,6 @@
+/*
+This packet is used for logging in application
+*/
 package logger
 
 import (
@@ -6,6 +9,7 @@ import (
 
 var logger *zap.SugaredLogger = zap.NewNop().Sugar()
 
+// Initialize init private singleton logger in Sugar mode with production config
 func Initialize(level string) error {
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {
@@ -22,14 +26,14 @@ func Initialize(level string) error {
 	return nil
 }
 
-func Debug(msg string, params ...interface{}) {
+func Debug(msg string, params ...any) {
 	logger.Debug(msg, params)
 }
 
-func Info(msg string, params ...interface{}) {
+func Info(msg string, params ...any) {
 	logger.Info(msg, params)
 }
 
-func Error(msg string, params ...interface{}) {
+func Error(msg string, params ...any) {
 	logger.Error(msg, params)
 }

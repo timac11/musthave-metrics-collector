@@ -2,9 +2,10 @@ package middleware
 
 import (
 	"bytes"
-	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"net/http"
 	"time"
+
+	"github.com/timac11/musthave-metrics-collector/internal/logger"
 )
 
 func (m *Middleware) RequestLoggerMiddleware(h http.Handler) http.Handler {

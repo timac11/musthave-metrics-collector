@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/timac11/musthave-metrics-collector/internal/audit"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 	persistentstorage "github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
 	memorystorage "github.com/timac11/musthave-metrics-collector/internal/repository/memory"
@@ -26,7 +27,8 @@ func TestPositiveUpdateMetricHandler(t *testing.T) {
 	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
 	storage := memorystorage.NewMemStorage(persistentStorage, false)
 	service := service.NewService(storage, defaultConfig)
-	handlers := NewApplicationAPIContainer(*service)
+	auditor := audit.NewAuditor("", "")
+	handlers := NewApplicationAPIContainer(*service, *auditor)
 
 	type result struct {
 		code        int
@@ -82,7 +84,8 @@ func TestNegativeUpdateMetric(t *testing.T) {
 	persistentStorage := persistentstorage.NewPersistentStorage(dbFilePath)
 	storage := memorystorage.NewMemStorage(persistentStorage, false)
 	service := service.NewService(storage, defaultConfig)
-	handlers := NewApplicationAPIContainer(*service)
+	auditor := audit.NewAuditor("", "")
+	handlers := NewApplicationAPIContainer(*service, *auditor)
 
 	tests := []struct {
 		name   string

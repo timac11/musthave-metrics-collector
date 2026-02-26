@@ -3,17 +3,28 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"net/http"
 )
 
+// GetMetric godoc
+// @Summary      Return metric info
+// @Description  Get metric by metricType and metricName
+// @Tags         Metrics
+// @Accept       json
+// @Produce      json
+// @Param        metricType   path    string  true  "Metric type"
+// @Param        metricName   path    string  true  "Metric name"
+// @Success      200  {object}  model.Metrics
+// @Router       /value/{metricType}/{metricName} [get]
 func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req *http.Request) {
 	metricType := chi.URLParam(req, "metricType")
 	metricName := chi.URLParam(req, "metricName")
 
-	metric, err := container.service.Get(metricName, metricType)
+	metric, err := container.service.Get(req.Context(), metricName, metricType)
 
 	if err != nil || metric == nil {
 		res.WriteHeader(http.StatusNotFound)
@@ -32,6 +43,15 @@ func (container *ApplicationAPIContainer) GetMetric(res http.ResponseWriter, req
 	}
 }
 
+// GetFullMetricInfo godoc
+// @Summary      Return metric info
+// @Description  Get metric by ID and type
+// @Tags         Metrics
+// @Accept       json
+// @Produce      json
+// @Param        body  body     model.Metrics  true  "Metric type"
+// @Success      200  {object}  model.Metrics
+// @Router       /value [post]
 func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWriter, req *http.Request) {
 	var metric model.Metrics
 
@@ -45,7 +65,7 @@ func (container *ApplicationAPIContainer) GetFullMetricInfo(res http.ResponseWri
 
 	logger.Info("Get metric params", metric.ID, metric.MType)
 
-	metricValue, err := container.service.Get(metric.ID, metric.MType)
+	metricValue, err := container.service.Get(req.Context(), metric.ID, metric.MType)
 
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)

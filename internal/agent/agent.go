@@ -16,6 +16,8 @@ type MetricsAgent struct {
 	config    *config.AgentConfig
 }
 
+// Start create two goroutines:
+// to start metrics collection to start sending metrics to server
 func (agent *MetricsAgent) Start() {
 	go agent.collectMetrics()
 	go agent.writeMetrics()
@@ -23,6 +25,7 @@ func (agent *MetricsAgent) Start() {
 }
 
 func NewMetricsAgent(agentConfig *config.AgentConfig) (*MetricsAgent, error) {
+	// count of sending metrics t server workers should be more or equal 1
 	if agentConfig.RateLimit == 0 {
 		return nil, fmt.Errorf("invalid count of workers: %d", agentConfig.RateLimit)
 	}

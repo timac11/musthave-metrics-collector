@@ -73,6 +73,8 @@ type ServerConfig struct {
 	Restore         bool   `env:"RESTORE"`
 	DatabaseDsn     string `env:"DATABASE_DSN"`
 	SigningKey      string `env:"KEY"`
+	AuditFile       string `env:"AUDIT_FILE"`
+	AuditURL        string `env:"AUDIT_URL"`
 	RetryAttempts   uint
 	RetryInterval   uint
 }
@@ -91,6 +93,14 @@ func InitServerConfig() *ServerConfig {
 
 	if serverEnv.DatabaseDsn == "" {
 		serverEnv.DatabaseDsn = serverFlags.DatabaseDsn
+	}
+
+	if serverEnv.AuditFile == "" {
+		serverEnv.AuditFile = serverFlags.AuditFile
+	}
+
+	if serverEnv.AuditURL == "" {
+		serverEnv.AuditURL = serverFlags.AuditURL
 	}
 
 	if serverEnv.SigningKey == "" {
@@ -122,9 +132,11 @@ func initServerFlags() *ServerConfig {
 	pflag.StringVarP(&serverFlags.DatabaseDsn, "db", "d", "", "Postgres database url")
 	pflag.StringVarP(&serverFlags.FileStoragePath, "file", "f", "./db.json", "File to store JSON file with metrics")
 	pflag.BoolVarP(&serverFlags.Restore, "restore", "r", true, "Restore or not metrics from file storage")
-	pflag.UintVar(&serverFlags.RetryAttempts, "retryAttempt", 3, "Count of retry attempts to execute metrics operation")
-	pflag.UintVar(&serverFlags.RetryInterval, "retryInterval", 2, "Interval in seconds between metric operation attempts")
-	pflag.StringVarP(&serverFlags.SigningKey, "signingKey", "k", "", "Signing key")
+	pflag.UintVar(&serverFlags.RetryAttempts, "retry-attempt", 3, "Count of retry attempts to execute metrics operation")
+	pflag.UintVar(&serverFlags.RetryInterval, "retry-interval", 2, "Interval in seconds between metric operation attempts")
+	pflag.StringVarP(&serverFlags.SigningKey, "signing-key", "k", "", "Signing key")
+	pflag.StringVar(&serverFlags.AuditFile, "audit-file", "", "File to store audit logs")
+	pflag.StringVar(&serverFlags.AuditURL, "audit-url", "", "Url to send audit logs")
 
 	pflag.Parse()
 

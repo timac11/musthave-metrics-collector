@@ -14,10 +14,10 @@ import (
 )
 
 type Repository interface {
-	Save(ctx context.Context, value model.Metrics) error
+	Save(ctx context.Context, value *model.Metrics) error
 	Get(ctx context.Context, id string, mType string) (*model.Metrics, error)
-	GetAll(ctx context.Context) ([]model.Metrics, error)
-	SaveAll(ctx context.Context, metrics []model.Metrics) error
+	GetAll(ctx context.Context) ([]*model.Metrics, error)
+	SaveAll(ctx context.Context, metrics []*model.Metrics) error
 	Ping(ctx context.Context) error
 }
 
@@ -40,21 +40,28 @@ func NewService(storage Repository, config ServiceConfig) *Service {
 	return service
 }
 
+// DBPing check storage availability
 func (service *Service) DBPing() error {
 	return service.storage.Ping(context.Background())
 }
 
-func (service *Service) Save(metric model.Metrics) error {
+// Save store metric
+// if metric exists than it is updated
+// otherwise metric is created
+func (service *Service) Save(ctx context.Context, metric *model.Metrics) error {
 	return retry.Do(
 		func() error {
 			storage := service.storage
 			return storage.Save(context.Background(), metric)
 		},
-		service.getRetryOptions()...,
+		service.getRetryOptions(ctx)...,
 	)
 }
 
-func (service *Service) SaveAll(metrics []model.Metrics) error {
+// SaveAll store all metrics
+// is some of metric exist in storage it updates with new values
+// otherwise metrics are created
+func (service *Service) SaveAll(ctx context.Context, metrics []*model.Metrics) error {
 	deduplicated := make(map[string]*model.Metrics)
 
 	for _, metric := range metrics {
@@ -64,58 +71,61 @@ func (service *Service) SaveAll(metrics []model.Metrics) error {
 			val := *existed.Delta + *metric.Delta
 			existed.Delta = &val
 		} else {
-			deduplicated[key] = &metric
+			deduplicated[key] = metric
 		}
 	}
 
-	uniqueMetrics := make([]model.Metrics, 0, len(deduplicated))
+	uniqueMetrics := make([]*model.Metrics, 0, len(deduplicated))
 
 	for _, metric := range deduplicated {
-		uniqueMetrics = append(uniqueMetrics, *metric)
+		uniqueMetrics = append(uniqueMetrics, metric)
 	}
 
 	return retry.Do(
 		func() error {
-			storage := service.storage
-			return storage.SaveAll(context.Background(), uniqueMetrics)
+			return service.storage.SaveAll(ctx, uniqueMetrics)
 		},
-		service.getRetryOptions()...,
+		service.getRetryOptions(ctx)...,
 	)
 }
 
-func (service *Service) Get(id string, mType string) (*model.Metrics, error) {
+// Get return metric from storage by id and metric type
+// id - is not enough. metric id (metric name) can be the same
+// pair id (name) + mType is unique
+func (service *Service) Get(ctx context.Context, id string, mType string) (*model.Metrics, error) {
 	var metric *model.Metrics
 	var err error
 
 	err = retry.Do(
 		func() error {
 			storage := service.storage
-			metric, err = storage.Get(context.Background(), id, mType)
+			metric, err = storage.Get(ctx, id, mType)
 			return err
 		},
-		service.getRetryOptions()...,
+		service.getRetryOptions(ctx)...,
 	)
 
 	return metric, err
 }
 
-func (service *Service) GetAll() ([]model.Metrics, error) {
-	var metrics []model.Metrics
+// GetAll return all metrics from storage
+func (service *Service) GetAll(ctx context.Context) ([]*model.Metrics, error) {
+	var metrics []*model.Metrics
 	var err error
 
 	err = retry.Do(
 		func() error {
 			storage := service.storage
-			metrics, err = storage.GetAll(context.Background())
+			metrics, err = storage.GetAll(ctx)
 			return err
 		},
-		service.getRetryOptions()...,
+		service.getRetryOptions(ctx)...,
 	)
 
 	return metrics, err
 }
 
-func (service *Service) getRetryOptions() []retry.Option {
+func (service *Service) getRetryOptions(ctx context.Context) []retry.Option {
 	return []retry.Option{
 		retry.RetryIf(func(err error) bool {
 			return service.isRetryableError(err)
@@ -124,7 +134,7 @@ func (service *Service) getRetryOptions() []retry.Option {
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
 			return time.Second + time.Duration(n*service.config.AttemptsInterval)*time.Second
 		}),
-		retry.Context(context.Background()),
+		retry.Context(ctx),
 	}
 }
 

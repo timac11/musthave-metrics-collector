@@ -1,0 +1,128 @@
+basePath: /
+definitions:
+  model.Metrics:
+    properties:
+      delta:
+        type: integer
+      hash:
+        type: string
+      id:
+        type: string
+      type:
+        type: string
+      value:
+        type: number
+    type: object
+info:
+  contact:
+    name: API Support
+  description: This is a Metrics collector swagger API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Metrics collector server API
+  version: "1.0"
+paths:
+  /update:
+    post:
+      consumes:
+      - application/json
+      description: Update metric V2
+      parameters:
+      - description: Metric type
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.Metrics'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Metrics'
+      summary: Update metric V2
+      tags:
+      - Metrics
+  /value:
+    post:
+      consumes:
+      - application/json
+      description: Get metric by ID and type
+      parameters:
+      - description: Metric type
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.Metrics'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Metrics'
+      summary: Return metric info
+      tags:
+      - Metrics
+  /value/{metricType}/{metricName}:
+    get:
+      consumes:
+      - application/json
+      description: Get metric by metricType and metricName
+      parameters:
+      - description: Metric type
+        in: path
+        name: metricType
+        required: true
+        type: string
+      - description: Metric name
+        in: path
+        name: metricName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Metrics'
+      summary: Return metric info
+      tags:
+      - Metrics
+  /value/{metricType}/{metricName}/{value}:
+    post:
+      consumes:
+      - application/json
+      description: Update metric V1
+      parameters:
+      - description: Metric type
+        in: path
+        name: metricType
+        required: true
+        type: string
+      - description: Metric name
+        in: path
+        name: metricName
+        required: true
+        type: string
+      - description: Metric value
+        in: path
+        name: value
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Metrics'
+      summary: Update metric V1
+      tags:
+      - Metrics
+swagger: "2.0"
