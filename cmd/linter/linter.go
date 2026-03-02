@@ -47,7 +47,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			}
 
 			if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
-				ident, ok := sel.X.(*ast.Ident);
+				ident, ok := sel.X.(*ast.Ident)
 
 				if !ok {
 					return true
