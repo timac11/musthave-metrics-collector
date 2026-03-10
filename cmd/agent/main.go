@@ -6,6 +6,8 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/agent"
 	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
+
+	"github.com/timac11/musthave-metrics-collector/cmd/version"
 )
 
 func main() {
@@ -17,6 +19,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	version.Print()
 
 	metricsAgent.Start()
 }
