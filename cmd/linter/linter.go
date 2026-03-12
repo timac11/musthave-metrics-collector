@@ -1,4 +1,4 @@
-package linter
+package main
 
 import (
 	"go/ast"
@@ -9,7 +9,7 @@ import (
 )
 
 var Analyzer = &analysis.Analyzer{
-	Name:     "no panic(), no log.Fatal() and no os.exit()",
+	Name:     "LintCheck",
 	Doc:      "no panic(), no log.Fatal() and no os.exit()",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
