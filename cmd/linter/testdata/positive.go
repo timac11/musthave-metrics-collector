@@ -10,6 +10,10 @@ func main() {
 	log.Fatal()
 }
 
+func positive() {
+	log.Print("Positive func")
+}
+
 func mainNegative() {
 	panic("Panic") // want "panic call is used"
 }
