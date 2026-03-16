@@ -7,6 +7,8 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/config"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/router"
+
+	"github.com/timac11/musthave-metrics-collector/cmd/version"
 )
 
 func main() {
@@ -22,6 +24,7 @@ func run() {
 		log.Fatal(err)
 	}
 
+	version.Print()
 	logger.Info("Starting server on address: ", conf.Address)
 
 	err = http.ListenAndServe(conf.Address, mux)
