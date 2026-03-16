@@ -11,6 +11,7 @@ type AgentConfig struct {
 	PollInterval   int    `env:"POLL_INTERVAL"`
 	SigningKey     string `env:"KEY"`
 	RateLimit      uint   `env:"RATE_LIMIT"`
+	CryptoKey      string `env:"CRYPTO_KEY"`
 	RetryAttempts  uint
 	RetryInterval  uint
 }
@@ -39,6 +40,10 @@ func InitAgentConfig() *AgentConfig {
 		agentEnv.SigningKey = agentFlags.SigningKey
 	}
 
+	if agentEnv.CryptoKey == "" {
+		agentEnv.CryptoKey = agentFlags.CryptoKey
+	}
+
 	return agentEnv
 }
 
@@ -51,8 +56,8 @@ func initAgentFlags() *AgentConfig {
 	pflag.UintVar(&agentFlags.RetryAttempts, "retryAttempt", 3, "Count of retry attempts to execute metrics operation")
 	pflag.UintVar(&agentFlags.RetryInterval, "retryInterval", 2, "Interval in seconds between metric operation attempts")
 	pflag.UintVarP(&agentFlags.RateLimit, "rateLimit", "l", 1, "Count of workers")
-
 	pflag.StringVarP(&agentFlags.SigningKey, "signingKey", "k", "", "Signing key")
+	pflag.StringVar(&agentFlags.CryptoKey, "crypto-key", "", "Public key file path")
 
 	pflag.Parse()
 
@@ -75,6 +80,7 @@ type ServerConfig struct {
 	SigningKey      string `env:"KEY"`
 	AuditFile       string `env:"AUDIT_FILE"`
 	AuditURL        string `env:"AUDIT_URL"`
+	CryptoKey       string `env:"CRYPTO_KEY"`
 	RetryAttempts   uint
 	RetryInterval   uint
 }
@@ -111,6 +117,10 @@ func InitServerConfig() *ServerConfig {
 		serverEnv.Restore = serverFlags.Restore
 	}
 
+	if serverEnv.CryptoKey == "" {
+		serverEnv.CryptoKey = serverFlags.CryptoKey
+	}
+
 	serverEnv.RetryAttempts = serverFlags.RetryAttempts
 	serverEnv.RetryInterval = serverFlags.RetryInterval
 
@@ -137,6 +147,7 @@ func initServerFlags() *ServerConfig {
 	pflag.StringVarP(&serverFlags.SigningKey, "signing-key", "k", "", "Signing key")
 	pflag.StringVar(&serverFlags.AuditFile, "audit-file", "", "File to store audit logs")
 	pflag.StringVar(&serverFlags.AuditURL, "audit-url", "", "Url to send audit logs")
+	pflag.StringVar(&serverFlags.CryptoKey, "crypto-key", "", "Private key file path")
 
 	pflag.Parse()
 
