@@ -1,6 +1,10 @@
 package config
 
 import (
+	"encoding/json"
+	"errors"
+	"os"
+
 	"github.com/caarlos0/env"
 	"github.com/spf13/pflag"
 )
@@ -56,11 +60,42 @@ func InitAgentConfig() *AgentConfig {
 		agentEnv.Config = agentFlags.Config
 	}
 
-	if agentEnv.Config != "" {
-		// TODO: add variables from json file
+	return assignAgentJsonConfig(agentEnv)
+}
+
+func assignAgentJsonConfig(config *AgentConfig) *AgentConfig {
+	if config.Config != "" {
+		_, err := os.Stat(config.Config)
+
+		if err == nil || !errors.Is(err, os.ErrNotExist) {
+			file, err := os.OpenFile(config.Config, os.O_RDONLY, 0x666)
+			if err == nil {
+				defer file.Close()
+				var jsonConfig agentJsonConfig
+
+				if err := json.NewDecoder(file).Decode(&jsonConfig); err == nil {
+					if config.Address == "" {
+						config.Address = jsonConfig.Address
+					}
+
+					if config.ReportInterval == 0 {
+						config.ReportInterval = jsonConfig.ReportInterval
+					}
+
+					if config.PollInterval == 0 {
+						config.PollInterval = jsonConfig.PollInterval
+					}
+
+					if config.CryptoKey == "" {
+						config.CryptoKey = jsonConfig.CryptoKey
+					}
+				}
+
+			}
+		}
 	}
 
-	return agentEnv
+	return config
 }
 
 func initAgentFlags() *AgentConfig {
@@ -154,11 +189,46 @@ func InitServerConfig() *ServerConfig {
 	serverEnv.RetryAttempts = serverFlags.RetryAttempts
 	serverEnv.RetryInterval = serverFlags.RetryInterval
 
-	if serverEnv.Config != "" {
-		// TODO: assign variables from file
+	return assignServerJsonConfig(serverEnv)
+}
+
+func assignServerJsonConfig(config *ServerConfig) *ServerConfig {
+	if config.Config != "" {
+		_, err := os.Stat(config.Config)
+
+		if err == nil || !errors.Is(err, os.ErrNotExist) {
+			file, err := os.OpenFile(config.Config, os.O_RDONLY, 0x666)
+			if err == nil {
+				defer file.Close()
+				var jsonConfig serverJsonConfig
+
+				if err := json.NewDecoder(file).Decode(&jsonConfig); err == nil {
+					if config.Address == "" {
+						config.Address = jsonConfig.Address
+					}
+
+					if !config.Restore {
+						config.Restore = jsonConfig.Restore
+					}
+
+					if config.FileStoragePath == "" {
+						config.FileStoragePath = jsonConfig.FileStoragePath
+					}
+
+					if config.DatabaseDsn == "" {
+						config.DatabaseDsn = jsonConfig.DatabaseDsn
+					}
+
+					if config.CryptoKey == "" {
+						config.CryptoKey = jsonConfig.CryptoKey
+					}
+				}
+
+			}
+		}
 	}
 
-	return serverEnv
+	return config
 }
 
 func initServerEnv() *ServerConfig {
