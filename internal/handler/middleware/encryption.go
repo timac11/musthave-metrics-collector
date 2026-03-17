@@ -2,14 +2,11 @@ package middleware
 
 import (
 	"bytes"
-	"net/http"
 	"io"
-
-	"github.com/timac11/musthave-metrics-collector/internal/common/util"
-	"github.com/timac11/musthave-metrics-collector/internal/logger"
+	"net/http"
 )
 
-func (m *Middleware) Decrypt(h http.Handler) http.Handler {
+func (m *Middleware) DecryptMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r == nil {
 			return
@@ -25,24 +22,17 @@ func (m *Middleware) Decrypt(h http.Handler) http.Handler {
 
 			r.Body.Close()
 
-			if len(bodyBytes) != 0 {
-				signature, err := util.CalculateSignature(bodyBytes, m.signingKey)
-
+			if len(bodyBytes) != 0 && m.decoder != nil {
+				decodedMessage, err := m.decoder.Decode(bodyBytes)
 				if err != nil {
-					logger.Error("Failed to calculate signature", err)
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 					return
 				}
 
-				requestSignature := r.Header.Get("HashSHA256")
-
-				if requestSignature != "" && signature != requestSignature {
-					http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-					return
-				}
+				r.Body = io.NopCloser(bytes.NewBuffer(decodedMessage))
+			} else {
+				r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			}
-
-			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		}
 
 		h.ServeHTTP(w, r)

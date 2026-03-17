@@ -34,9 +34,13 @@ func NewMetricsAgent(agentConfig *config.AgentConfig) (*MetricsAgent, error) {
 		Attempts:         agentConfig.RetryAttempts,
 		AttemptsInterval: agentConfig.RetryInterval,
 		SigningKey:       agentConfig.SigningKey,
+		CryptoKey:        agentConfig.CryptoKey,
 	}
 	mc := newMetricsCollector()
-	mw := newMetricsWriter(agentConfig.Address, writerConfig)
+	mw, err := newMetricsWriter(agentConfig.Address, writerConfig)
+	if err != nil {
+		return nil, err
+	}
 
 	ch := make(chan *CollectedMetrics, agentConfig.RateLimit)
 
