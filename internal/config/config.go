@@ -12,8 +12,16 @@ type AgentConfig struct {
 	SigningKey     string `env:"KEY"`
 	RateLimit      uint   `env:"RATE_LIMIT"`
 	CryptoKey      string `env:"CRYPTO_KEY"`
+	Config         string `env:"CONFIG"`
 	RetryAttempts  uint
 	RetryInterval  uint
+}
+
+type agentJsonConfig struct {
+	Address        string `json:"address"`
+	ReportInterval int    `json:"report_interval"`
+	PollInterval   int    `json:"poll_interval"`
+	CryptoKey      string `json:"crypto_key"`
 }
 
 func InitAgentConfig() *AgentConfig {
@@ -44,6 +52,14 @@ func InitAgentConfig() *AgentConfig {
 		agentEnv.CryptoKey = agentFlags.CryptoKey
 	}
 
+	if agentEnv.Config == "" {
+		agentEnv.Config = agentFlags.Config
+	}
+
+	if agentEnv.Config != "" {
+		// TODO: add variables from json file
+	}
+
 	return agentEnv
 }
 
@@ -58,6 +74,7 @@ func initAgentFlags() *AgentConfig {
 	pflag.UintVarP(&agentFlags.RateLimit, "rateLimit", "l", 1, "Count of workers")
 	pflag.StringVarP(&agentFlags.SigningKey, "signingKey", "k", "", "Signing key")
 	pflag.StringVar(&agentFlags.CryptoKey, "crypto-key", "", "Public key file path")
+	pflag.StringVarP(&agentFlags.Config, "config", "c", "", "Path to config json")
 
 	pflag.Parse()
 
@@ -81,8 +98,17 @@ type ServerConfig struct {
 	AuditFile       string `env:"AUDIT_FILE"`
 	AuditURL        string `env:"AUDIT_URL"`
 	CryptoKey       string `env:"CRYPTO_KEY"`
+	Config          string `env:"CONFIG"`
 	RetryAttempts   uint
 	RetryInterval   uint
+}
+
+type serverJsonConfig struct {
+	Address         string `json:"address"`
+	Restore         bool   `json:"restore"`
+	FileStoragePath string `json:"store_file"`
+	DatabaseDsn     string `json:"database_dsn"`
+	CryptoKey       string `json:"crypto_key"`
 }
 
 func InitServerConfig() *ServerConfig {
@@ -121,8 +147,16 @@ func InitServerConfig() *ServerConfig {
 		serverEnv.CryptoKey = serverFlags.CryptoKey
 	}
 
+	if serverEnv.Config == "" {
+		serverEnv.Config = serverFlags.Config
+	}
+
 	serverEnv.RetryAttempts = serverFlags.RetryAttempts
 	serverEnv.RetryInterval = serverFlags.RetryInterval
+
+	if serverEnv.Config != "" {
+		// TODO: assign variables from file
+	}
 
 	return serverEnv
 }
@@ -148,6 +182,7 @@ func initServerFlags() *ServerConfig {
 	pflag.StringVar(&serverFlags.AuditFile, "audit-file", "", "File to store audit logs")
 	pflag.StringVar(&serverFlags.AuditURL, "audit-url", "", "Url to send audit logs")
 	pflag.StringVar(&serverFlags.CryptoKey, "crypto-key", "", "Private key file path")
+	pflag.StringVarP(&serverFlags.Config, "config", "c", "", "Path to config json")
 
 	pflag.Parse()
 
