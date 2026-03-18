@@ -21,7 +21,7 @@ type AgentConfig struct {
 	RetryInterval  uint
 }
 
-type agentJsonConfig struct {
+type agentJSONConfig struct {
 	Address        string `json:"address"`
 	ReportInterval int    `json:"report_interval"`
 	PollInterval   int    `json:"poll_interval"`
@@ -60,10 +60,10 @@ func InitAgentConfig() *AgentConfig {
 		agentEnv.Config = agentFlags.Config
 	}
 
-	return assignAgentJsonConfig(agentEnv)
+	return assignAgentJSONConfig(agentEnv)
 }
 
-func assignAgentJsonConfig(config *AgentConfig) *AgentConfig {
+func assignAgentJSONConfig(config *AgentConfig) *AgentConfig {
 	if config.Config != "" {
 		_, err := os.Stat(config.Config)
 
@@ -71,7 +71,7 @@ func assignAgentJsonConfig(config *AgentConfig) *AgentConfig {
 			file, err := os.OpenFile(config.Config, os.O_RDONLY, 0x666)
 			if err == nil {
 				defer file.Close()
-				var jsonConfig agentJsonConfig
+				var jsonConfig agentJSONConfig
 
 				if err := json.NewDecoder(file).Decode(&jsonConfig); err == nil {
 					if config.Address == "" {
@@ -138,7 +138,7 @@ type ServerConfig struct {
 	RetryInterval   uint
 }
 
-type serverJsonConfig struct {
+type serverJSONConfig struct {
 	Address         string `json:"address"`
 	Restore         bool   `json:"restore"`
 	FileStoragePath string `json:"store_file"`
@@ -189,10 +189,10 @@ func InitServerConfig() *ServerConfig {
 	serverEnv.RetryAttempts = serverFlags.RetryAttempts
 	serverEnv.RetryInterval = serverFlags.RetryInterval
 
-	return assignServerJsonConfig(serverEnv)
+	return assignServerJSONConfig(serverEnv)
 }
 
-func assignServerJsonConfig(config *ServerConfig) *ServerConfig {
+func assignServerJSONConfig(config *ServerConfig) *ServerConfig {
 	if config.Config != "" {
 		_, err := os.Stat(config.Config)
 
@@ -200,7 +200,7 @@ func assignServerJsonConfig(config *ServerConfig) *ServerConfig {
 			file, err := os.OpenFile(config.Config, os.O_RDONLY, 0x666)
 			if err == nil {
 				defer file.Close()
-				var jsonConfig serverJsonConfig
+				var jsonConfig serverJSONConfig
 
 				if err := json.NewDecoder(file).Decode(&jsonConfig); err == nil {
 					if config.Address == "" {

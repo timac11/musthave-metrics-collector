@@ -100,6 +100,7 @@ func (mw *MetricsWriter) writeMetric(metric model.Metrics) error {
 	err = retry.Do(
 		func() error {
 			res, err = mw.client.R().SetBody(body).SetHeader("HashSHA256", signature).Post("/update")
+			logger.Error(err.Error())
 			return err
 		},
 		mw.getRetryOptions()...,
@@ -132,6 +133,7 @@ func newMetricsWriter(url string, config MetricsWriterConfig) (*MetricsWriter, e
 	}
 
 	client.SetBaseURL(url)
+	client.SetTimeout(time.Duration(10 * time.Second))
 
 	if config.CryptoKey != "" {
 		encoder, err := encryption.NewEncoder(config.CryptoKey)
