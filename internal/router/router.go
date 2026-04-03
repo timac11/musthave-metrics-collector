@@ -60,7 +60,7 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 		router.Mount("/", chimiddleware.Profiler())
 	})
 
-	m, err := middleware.NewMiddleware(serverConfig.SigningKey, serverConfig.CryptoKey)
+	m, err := middleware.NewMiddleware(serverConfig.SigningKey, serverConfig.CryptoKey, serverConfig.TrustedSubnet)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +70,7 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 		middlewares := []func(http.Handler) http.Handler{
 			m.GzipMiddleware,
 			m.RequestLoggerMiddleware,
+			m.CheckSubnetMiddleware,
 		}
 		router.Use(middlewares...)
 

@@ -134,6 +134,7 @@ type ServerConfig struct {
 	AuditURL        string `env:"AUDIT_URL"`
 	CryptoKey       string `env:"CRYPTO_KEY"`
 	Config          string `env:"CONFIG"`
+	TrustedSubnet   string `env:"TRUSTED_SUBNET"`
 	RetryAttempts   uint
 	RetryInterval   uint
 }
@@ -144,6 +145,7 @@ type serverJSONConfig struct {
 	FileStoragePath string `json:"store_file"`
 	DatabaseDsn     string `json:"database_dsn"`
 	CryptoKey       string `json:"crypto_key"`
+	TrustedSubnet   string `json:"trusted_subnet"`
 }
 
 func InitServerConfig() *ServerConfig {
@@ -186,6 +188,10 @@ func InitServerConfig() *ServerConfig {
 		serverEnv.Config = serverFlags.Config
 	}
 
+	if serverEnv.TrustedSubnet != "" {
+		serverEnv.TrustedSubnet = serverFlags.TrustedSubnet
+	}
+
 	serverEnv.RetryAttempts = serverFlags.RetryAttempts
 	serverEnv.RetryInterval = serverFlags.RetryInterval
 
@@ -222,6 +228,10 @@ func assignServerJSONConfig(config *ServerConfig) *ServerConfig {
 					if config.CryptoKey == "" {
 						config.CryptoKey = jsonConfig.CryptoKey
 					}
+
+					if config.TrustedSubnet == "" {
+						config.TrustedSubnet = jsonConfig.TrustedSubnet
+					}
 				}
 
 			}
@@ -249,6 +259,7 @@ func initServerFlags() *ServerConfig {
 	pflag.UintVar(&serverFlags.RetryAttempts, "retry-attempt", 3, "Count of retry attempts to execute metrics operation")
 	pflag.UintVar(&serverFlags.RetryInterval, "retry-interval", 2, "Interval in seconds between metric operation attempts")
 	pflag.StringVarP(&serverFlags.SigningKey, "signing-key", "k", "", "Signing key")
+	pflag.StringVarP(&serverFlags.TrustedSubnet, "trusted-subnet", "t", "", "Trusted subnet")
 	pflag.StringVar(&serverFlags.AuditFile, "audit-file", "", "File to store audit logs")
 	pflag.StringVar(&serverFlags.AuditURL, "audit-url", "", "Url to send audit logs")
 	pflag.StringVar(&serverFlags.CryptoKey, "crypto-key", "", "Private key file path")

@@ -99,7 +99,10 @@ func TestWriteMetric(t *testing.T) {
 					Value: &tc.value,
 				}
 
-				mw, _ := newMetricsWriter(testServer.URL, defaultConfig)
+				mw, err := newMetricsWriter(testServer.URL, defaultConfig)
+
+				require.NoError(t, err)
+
 				mw.writeMetric(sendedMetric)
 
 				assert.Equal(t, tc.expected, capturedURL)

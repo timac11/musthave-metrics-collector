@@ -1,24 +1,40 @@
 package middleware
 
 import (
+	"net/netip"
+
 	"github.com/timac11/musthave-metrics-collector/internal/encryption"
 )
 
 type Middleware struct {
 	signingKey string
 	decoder    *encryption.Decoder
+	subnet     *netip.Prefix
 }
 
-func NewMiddleware(hashingKey, pkPath string) (*Middleware, error) {
+func NewMiddleware(hashingKey, pkPath, trustedSubnet string) (*Middleware, error) {
+	var decoder *encryption.Decoder
+	var subnet *netip.Prefix
+
 	if pkPath != "" {
-		decoder, err := encryption.NewDecoder(pkPath)
+		newDecoder, err := encryption.NewDecoder(pkPath)
 
 		if err != nil {
 			return nil, err
 		}
 
-		return &Middleware{signingKey: hashingKey, decoder: decoder}, nil
+		decoder = newDecoder
 	}
 
-	return &Middleware{signingKey: hashingKey}, nil
+	if trustedSubnet != "" {
+		parsed, err := netip.ParsePrefix(trustedSubnet)
+
+		if err != nil {
+			return nil, err
+		}
+
+		subnet = &parsed
+	}
+
+	return &Middleware{signingKey: hashingKey, decoder: decoder, subnet: subnet}, nil
 }
