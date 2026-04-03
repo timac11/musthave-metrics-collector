@@ -60,9 +60,12 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 		router.Mount("/", chimiddleware.Profiler())
 	})
 
-	router.Route("/", func(router chi.Router) {
-		m := middleware.NewMiddleware(serverConfig.SigningKey)
+	m, err := middleware.NewMiddleware(serverConfig.SigningKey, serverConfig.CryptoKey)
+	if err != nil {
+		return nil, err
+	}
 
+	router.Route("/", func(router chi.Router) {
 		// setup middlewares
 		middlewares := []func(http.Handler) http.Handler{
 			m.GzipMiddleware,
@@ -77,6 +80,8 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 			}
 			router.Use(hashMiddleware...)
 		}
+
+		router.Use(m.DecryptMiddleware)
 
 		// setup routes
 		router.Post("/update", handlers.UpdateMetricV2)

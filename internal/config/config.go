@@ -1,6 +1,10 @@
 package config
 
 import (
+	"encoding/json"
+	"errors"
+	"os"
+
 	"github.com/caarlos0/env"
 	"github.com/spf13/pflag"
 )
@@ -11,8 +15,17 @@ type AgentConfig struct {
 	PollInterval   int    `env:"POLL_INTERVAL"`
 	SigningKey     string `env:"KEY"`
 	RateLimit      uint   `env:"RATE_LIMIT"`
+	CryptoKey      string `env:"CRYPTO_KEY"`
+	Config         string `env:"CONFIG"`
 	RetryAttempts  uint
 	RetryInterval  uint
+}
+
+type agentJSONConfig struct {
+	Address        string `json:"address"`
+	ReportInterval int    `json:"report_interval"`
+	PollInterval   int    `json:"poll_interval"`
+	CryptoKey      string `json:"crypto_key"`
 }
 
 func InitAgentConfig() *AgentConfig {
@@ -39,7 +52,50 @@ func InitAgentConfig() *AgentConfig {
 		agentEnv.SigningKey = agentFlags.SigningKey
 	}
 
-	return agentEnv
+	if agentEnv.CryptoKey == "" {
+		agentEnv.CryptoKey = agentFlags.CryptoKey
+	}
+
+	if agentEnv.Config == "" {
+		agentEnv.Config = agentFlags.Config
+	}
+
+	return assignAgentJSONConfig(agentEnv)
+}
+
+func assignAgentJSONConfig(config *AgentConfig) *AgentConfig {
+	if config.Config != "" {
+		_, err := os.Stat(config.Config)
+
+		if err == nil || !errors.Is(err, os.ErrNotExist) {
+			file, err := os.OpenFile(config.Config, os.O_RDONLY, 0x666)
+			if err == nil {
+				defer file.Close()
+				var jsonConfig agentJSONConfig
+
+				if err := json.NewDecoder(file).Decode(&jsonConfig); err == nil {
+					if config.Address == "" {
+						config.Address = jsonConfig.Address
+					}
+
+					if config.ReportInterval == 0 {
+						config.ReportInterval = jsonConfig.ReportInterval
+					}
+
+					if config.PollInterval == 0 {
+						config.PollInterval = jsonConfig.PollInterval
+					}
+
+					if config.CryptoKey == "" {
+						config.CryptoKey = jsonConfig.CryptoKey
+					}
+				}
+
+			}
+		}
+	}
+
+	return config
 }
 
 func initAgentFlags() *AgentConfig {
@@ -51,8 +107,9 @@ func initAgentFlags() *AgentConfig {
 	pflag.UintVar(&agentFlags.RetryAttempts, "retryAttempt", 3, "Count of retry attempts to execute metrics operation")
 	pflag.UintVar(&agentFlags.RetryInterval, "retryInterval", 2, "Interval in seconds between metric operation attempts")
 	pflag.UintVarP(&agentFlags.RateLimit, "rateLimit", "l", 1, "Count of workers")
-
 	pflag.StringVarP(&agentFlags.SigningKey, "signingKey", "k", "", "Signing key")
+	pflag.StringVar(&agentFlags.CryptoKey, "crypto-key", "", "Public key file path")
+	pflag.StringVarP(&agentFlags.Config, "config", "c", "", "Path to config json")
 
 	pflag.Parse()
 
@@ -75,8 +132,18 @@ type ServerConfig struct {
 	SigningKey      string `env:"KEY"`
 	AuditFile       string `env:"AUDIT_FILE"`
 	AuditURL        string `env:"AUDIT_URL"`
+	CryptoKey       string `env:"CRYPTO_KEY"`
+	Config          string `env:"CONFIG"`
 	RetryAttempts   uint
 	RetryInterval   uint
+}
+
+type serverJSONConfig struct {
+	Address         string `json:"address"`
+	Restore         bool   `json:"restore"`
+	FileStoragePath string `json:"store_file"`
+	DatabaseDsn     string `json:"database_dsn"`
+	CryptoKey       string `json:"crypto_key"`
 }
 
 func InitServerConfig() *ServerConfig {
@@ -111,10 +178,57 @@ func InitServerConfig() *ServerConfig {
 		serverEnv.Restore = serverFlags.Restore
 	}
 
+	if serverEnv.CryptoKey == "" {
+		serverEnv.CryptoKey = serverFlags.CryptoKey
+	}
+
+	if serverEnv.Config == "" {
+		serverEnv.Config = serverFlags.Config
+	}
+
 	serverEnv.RetryAttempts = serverFlags.RetryAttempts
 	serverEnv.RetryInterval = serverFlags.RetryInterval
 
-	return serverEnv
+	return assignServerJSONConfig(serverEnv)
+}
+
+func assignServerJSONConfig(config *ServerConfig) *ServerConfig {
+	if config.Config != "" {
+		_, err := os.Stat(config.Config)
+
+		if err == nil || !errors.Is(err, os.ErrNotExist) {
+			file, err := os.OpenFile(config.Config, os.O_RDONLY, 0x666)
+			if err == nil {
+				defer file.Close()
+				var jsonConfig serverJSONConfig
+
+				if err := json.NewDecoder(file).Decode(&jsonConfig); err == nil {
+					if config.Address == "" {
+						config.Address = jsonConfig.Address
+					}
+
+					if !config.Restore {
+						config.Restore = jsonConfig.Restore
+					}
+
+					if config.FileStoragePath == "" {
+						config.FileStoragePath = jsonConfig.FileStoragePath
+					}
+
+					if config.DatabaseDsn == "" {
+						config.DatabaseDsn = jsonConfig.DatabaseDsn
+					}
+
+					if config.CryptoKey == "" {
+						config.CryptoKey = jsonConfig.CryptoKey
+					}
+				}
+
+			}
+		}
+	}
+
+	return config
 }
 
 func initServerEnv() *ServerConfig {
@@ -137,6 +251,8 @@ func initServerFlags() *ServerConfig {
 	pflag.StringVarP(&serverFlags.SigningKey, "signing-key", "k", "", "Signing key")
 	pflag.StringVar(&serverFlags.AuditFile, "audit-file", "", "File to store audit logs")
 	pflag.StringVar(&serverFlags.AuditURL, "audit-url", "", "Url to send audit logs")
+	pflag.StringVar(&serverFlags.CryptoKey, "crypto-key", "", "Private key file path")
+	pflag.StringVarP(&serverFlags.Config, "config", "c", "", "Path to config json")
 
 	pflag.Parse()
 

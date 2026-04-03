@@ -30,3 +30,5 @@ metricstest_v2-darwin-amd64
 cmd/server/db.json
 db.json
 main
+
+/recs
