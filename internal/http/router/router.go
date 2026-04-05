@@ -10,15 +10,15 @@ import (
 
 	"github.com/timac11/musthave-metrics-collector/internal/audit"
 	"github.com/timac11/musthave-metrics-collector/internal/config"
-	"github.com/timac11/musthave-metrics-collector/internal/handler"
-	"github.com/timac11/musthave-metrics-collector/internal/handler/middleware"
+	"github.com/timac11/musthave-metrics-collector/internal/http/handler"
+	"github.com/timac11/musthave-metrics-collector/internal/http/handler/middleware"
 	persistentstorage "github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
 	dbstorage "github.com/timac11/musthave-metrics-collector/internal/repository/db"
 	memorystorage "github.com/timac11/musthave-metrics-collector/internal/repository/memory"
 	"github.com/timac11/musthave-metrics-collector/internal/service"
 
 	httpSwagger "github.com/swaggo/http-swagger/v2"
-	_ "github.com/timac11/musthave-metrics-collector/internal/handler/docs"
+	_ "github.com/timac11/musthave-metrics-collector/internal/http/handler/docs"
 )
 
 // @title Metrics collector server API

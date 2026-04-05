@@ -9,8 +9,9 @@ import (
 	"log"
 
 	"github.com/timac11/musthave-metrics-collector/internal/config"
+	"github.com/timac11/musthave-metrics-collector/internal/http"
+	"github.com/timac11/musthave-metrics-collector/internal/http/router"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
-	"github.com/timac11/musthave-metrics-collector/internal/router"
 
 	"github.com/timac11/musthave-metrics-collector/cmd/version"
 
@@ -32,7 +33,7 @@ func RunApplication() {
 	version.Print()
 	logger.Info("Starting server on address: ", conf.Address)
 
-	server := NewServer(conf.Address, mux)
+	server := http.NewServer(conf.Address, mux)
 	g.Go(func() error {
 		return server.Start()
 	})

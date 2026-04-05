@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/netip"
 
-	"github.com/timac11/musthave-metrics-collector/internal/encryption"
+	"github.com/timac11/musthave-metrics-collector/internal/common/encryption"
 )
 
 type Middleware struct {

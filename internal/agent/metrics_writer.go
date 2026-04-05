@@ -12,7 +12,7 @@ import (
 	"github.com/go-resty/resty/v2"
 
 	"github.com/timac11/musthave-metrics-collector/internal/common/util"
-	"github.com/timac11/musthave-metrics-collector/internal/encryption"
+	"github.com/timac11/musthave-metrics-collector/internal/common/encryption"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
