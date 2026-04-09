@@ -57,9 +57,10 @@ func NewMetricsAgent(agentConfig *config.AgentConfig) (*MetricsAgent, error) {
 		AttemptsInterval: agentConfig.RetryInterval,
 		SigningKey:       agentConfig.SigningKey,
 		CryptoKey:        agentConfig.CryptoKey,
+		URL:              agentConfig.Address,
 	}
 	mc := newMetricsCollector()
-	mw, err := newMetricsWriter(agentConfig.Address, writerConfig)
+	mw, err := newMetricsWriter(writerConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +121,7 @@ func (agent *MetricsAgent) runWriteMetricsWorker(ctx context.Context, worker int
 
 			collector.addValueToPollCount(-pollCount)
 
-			err := writer.Write(metrics)
+			err := writer.Write(ctx, metrics)
 
 			if err != nil {
 				logger.Error("Failed write metrics", "worker", worker, err)

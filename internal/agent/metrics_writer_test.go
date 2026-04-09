@@ -11,11 +11,10 @@ import (
 	"github.com/timac11/musthave-metrics-collector/internal/model"
 )
 
-var defaultConfig MetricsWriterConfig = MetricsWriterConfig{Attempts: 1, AttemptsInterval: 2}
-
 func TestWrite(t *testing.T) {
 	t.Run("should each metric", func(t *testing.T) {
 		// Create test server to capture requests
+		ctx := t.Context()
 		requests := []string{}
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Record the request URL
@@ -31,9 +30,10 @@ func TestWrite(t *testing.T) {
 			{ID: "metric1", MType: model.Gauge, Value: &value1},
 			{ID: "metric2", MType: model.Counter, Value: &value2},
 		}
+		defaultConfig := MetricsWriterConfig{URL: testServer.URL, Attempts: 1, AttemptsInterval: 2}
 
-		mw, _ := newMetricsWriter(testServer.URL, defaultConfig)
-		mw.Write(metrics)
+		mw, _ := newMetricsWriter(defaultConfig)
+		mw.Write(ctx, metrics)
 
 		// Verify requests were made
 		require.Len(t, requests, 1)
@@ -45,6 +45,7 @@ func TestWrite(t *testing.T) {
 
 func TestWriteMetric(t *testing.T) {
 	t.Run("should handle HTTP request failure", func(t *testing.T) {
+		ctx := t.Context()
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			hj, ok := w.(http.Hijacker)
 			if ok {
@@ -60,16 +61,18 @@ func TestWriteMetric(t *testing.T) {
 			MType: model.Gauge,
 			Value: &value,
 		}
+		defaultConfig := MetricsWriterConfig{URL: testServer.URL, Attempts: 1, AttemptsInterval: 2}
 
 		require.NotPanics(t, func() {
-			mw, _ := newMetricsWriter(testServer.URL, defaultConfig)
-			mw.writeMetric(metric)
+			mw, _ := newMetricsWriter(defaultConfig)
+			mw.writeMetric(ctx, metric)
 		})
 
 		testServer.Close()
 	})
 
 	t.Run("should format float values correctly in URL", func(t *testing.T) {
+		ctx := t.Context()
 		testCases := []struct {
 			name     string
 			value    float64
@@ -99,11 +102,12 @@ func TestWriteMetric(t *testing.T) {
 					Value: &tc.value,
 				}
 
-				mw, err := newMetricsWriter(testServer.URL, defaultConfig)
+				defaultConfig := MetricsWriterConfig{URL: testServer.URL, Attempts: 1, AttemptsInterval: 2}
+				mw, err := newMetricsWriter(defaultConfig)
 
 				require.NoError(t, err)
 
-				mw.writeMetric(sendedMetric)
+				mw.writeMetric(ctx, sendedMetric)
 
 				assert.Equal(t, tc.expected, capturedURL)
 				assert.Equal(t, sendedMetric.ID, metric.ID)
