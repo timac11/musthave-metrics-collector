@@ -17,6 +17,7 @@ type AgentConfig struct {
 	RateLimit      uint   `env:"RATE_LIMIT"`
 	CryptoKey      string `env:"CRYPTO_KEY"`
 	Config         string `env:"CONFIG"`
+	Mode           string `env:"MODE"`
 	RetryAttempts  uint
 	RetryInterval  uint
 }
@@ -58,6 +59,10 @@ func InitAgentConfig() *AgentConfig {
 
 	if agentEnv.Config == "" {
 		agentEnv.Config = agentFlags.Config
+	}
+
+	if agentEnv.Mode == "" {
+		agentEnv.Mode = agentFlags.Mode
 	}
 
 	return assignAgentJSONConfig(agentEnv)
@@ -109,6 +114,7 @@ func initAgentFlags() *AgentConfig {
 	pflag.UintVarP(&agentFlags.RateLimit, "rateLimit", "l", 1, "Count of workers")
 	pflag.StringVarP(&agentFlags.SigningKey, "signingKey", "k", "", "Signing key")
 	pflag.StringVar(&agentFlags.CryptoKey, "crypto-key", "", "Public key file path")
+	pflag.StringVar(&agentFlags.Mode, "mode", "http", "Transport type: http or grpc")
 	pflag.StringVarP(&agentFlags.Config, "config", "c", "", "Path to config json")
 
 	pflag.Parse()
@@ -135,6 +141,7 @@ type ServerConfig struct {
 	CryptoKey       string `env:"CRYPTO_KEY"`
 	Config          string `env:"CONFIG"`
 	TrustedSubnet   string `env:"TRUSTED_SUBNET"`
+	Mode            string `env:"MODE"`
 	RetryAttempts   uint
 	RetryInterval   uint
 }
@@ -190,6 +197,10 @@ func InitServerConfig() *ServerConfig {
 
 	if serverEnv.TrustedSubnet != "" {
 		serverEnv.TrustedSubnet = serverFlags.TrustedSubnet
+	}
+
+	if serverEnv.Mode != "" {
+		serverEnv.Mode = serverFlags.Mode
 	}
 
 	serverEnv.RetryAttempts = serverFlags.RetryAttempts
@@ -263,6 +274,7 @@ func initServerFlags() *ServerConfig {
 	pflag.StringVar(&serverFlags.AuditFile, "audit-file", "", "File to store audit logs")
 	pflag.StringVar(&serverFlags.AuditURL, "audit-url", "", "Url to send audit logs")
 	pflag.StringVar(&serverFlags.CryptoKey, "crypto-key", "", "Private key file path")
+	pflag.StringVar(&serverFlags.Mode, "mode", "http", "Transport type: http or grpc")
 	pflag.StringVarP(&serverFlags.Config, "config", "c", "", "Path to config json")
 
 	pflag.Parse()

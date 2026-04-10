@@ -2,42 +2,38 @@ package grpc
 
 import (
 	"context"
+	"net"
 
-	"github.com/timac11/musthave-metrics-collector/internal/model"
-	"github.com/timac11/musthave-metrics-collector/internal/service"
+	"google.golang.org/grpc"
 
 	pb "github.com/timac11/musthave-metrics-collector/internal/grpc/proto"
+	"github.com/timac11/musthave-metrics-collector/internal/grpc/server"
+	"github.com/timac11/musthave-metrics-collector/internal/service"
 )
 
-type GrpcServer struct {
-	pb.UnimplementedMetricsServer
-	service service.Service
+type Server struct {
+	grpcServer *grpc.Server
+	addr       string
+	service    service.Service
 }
 
-func (server *GrpcServer) UpdateMetrics(ctx context.Context, in *pb.UpdateMetricsRequest) (*pb.UpdateMetricsResponse, error) {
-	var response pb.UpdateMetricsResponse
-	var modelMetrics []*model.Metrics
+func NewServer(addr string, service service.Service) *Server {
+	server := grpc.NewServer()
+	return &Server{grpcServer: server, addr: addr, service: service}
+}
 
-	for _, metric := range in.GetMetrics() {
-		mtype := metric.GetType()
-		modelMetric := model.Metrics{
-			ID: metric.GetId(),
-		}
-
-		if mtype == 0 {
-			value := metric.GetValue()
-			modelMetric.MType = model.Gauge
-			modelMetric.Value = &value
-		} else {
-			delta := metric.GetDelta()
-			modelMetric.MType = model.Counter
-			modelMetric.Delta = &delta
-		}
-
-		modelMetrics = append(modelMetrics, &modelMetric)
+func (s *Server) Start() error {
+	listen, err := net.Listen("tcp", s.addr)
+	if err != nil {
+		return err
 	}
 
-	server.service.SaveAll(ctx, modelMetrics)
+	pb.RegisterMetricsServer(s.grpcServer, server.NewMetricServer(s.service))
 
-	return &response, nil
+	return s.grpcServer.Serve(listen)
+}
+
+func (s *Server) Stop(ctx context.Context) error {
+	s.grpcServer.GracefulStop()
+	return nil
 }

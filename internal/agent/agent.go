@@ -58,6 +58,7 @@ func NewMetricsAgent(agentConfig *config.AgentConfig) (*MetricsAgent, error) {
 		SigningKey:       agentConfig.SigningKey,
 		CryptoKey:        agentConfig.CryptoKey,
 		URL:              agentConfig.Address,
+		Mode:             agentConfig.Mode,
 	}
 	mc := newMetricsCollector()
 	mw, err := newMetricsWriter(writerConfig)
