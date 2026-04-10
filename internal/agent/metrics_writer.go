@@ -88,7 +88,7 @@ func newMetricsWriter(config MetricsWriterConfig) (*MetricsWriter, error) {
 	var client Client
 
 	if config.Mode == "http" {
-		client, err := newHttpClient(HttpClientConfig{address: config.URL, cryptoKey: config.CryptoKey, signingKey: config.SigningKey})
+		client, err := newHTTPClient(HTTPClientConfig{address: config.URL, cryptoKey: config.CryptoKey, signingKey: config.SigningKey})
 
 		if err != nil {
 			return nil, err

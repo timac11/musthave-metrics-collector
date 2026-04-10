@@ -15,19 +15,19 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type HttpClient struct {
+type HTTPClient struct {
 	client     resty.Client
 	encoder    *encryption.Encoder
 	signingKey string
 }
 
-type HttpClientConfig struct {
+type HTTPClientConfig struct {
 	address    string
 	cryptoKey  string
 	signingKey string
 }
 
-func newHttpClient(conf HttpClientConfig) (*HttpClient, error) {
+func newHTTPClient(conf HTTPClientConfig) (*HTTPClient, error) {
 	client := resty.New()
 	url := conf.address
 
@@ -50,10 +50,10 @@ func newHttpClient(conf HttpClientConfig) (*HttpClient, error) {
 		encoder = newEncoder
 	}
 
-	return &HttpClient{client: *client, signingKey: conf.signingKey, encoder: encoder}, nil
+	return &HTTPClient{client: *client, signingKey: conf.signingKey, encoder: encoder}, nil
 }
 
-func (client *HttpClient) calculateRequestBody(body any) ([]byte, error) {
+func (client *HTTPClient) calculateRequestBody(body any) ([]byte, error) {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return []byte{}, err
@@ -66,7 +66,7 @@ func (client *HttpClient) calculateRequestBody(body any) ([]byte, error) {
 	return data, nil
 }
 
-func (client *HttpClient) UpdateMetrics(ctx context.Context, metrics []model.Metrics) error {
+func (client *HTTPClient) UpdateMetrics(ctx context.Context, metrics []model.Metrics) error {
 	var err error
 
 	body, err := client.calculateRequestBody(metrics)
@@ -85,7 +85,7 @@ func (client *HttpClient) UpdateMetrics(ctx context.Context, metrics []model.Met
 	return err
 }
 
-func (client *HttpClient) UpdateMetric(ctx context.Context, metric model.Metrics) error {
+func (client *HTTPClient) UpdateMetric(ctx context.Context, metric model.Metrics) error {
 	var err error
 
 	body, err := client.calculateRequestBody(metric)
