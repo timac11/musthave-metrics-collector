@@ -5,7 +5,6 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
 
 	"github.com/timac11/musthave-metrics-collector/internal/common/util"
 	pb "github.com/timac11/musthave-metrics-collector/internal/grpc/proto"
@@ -62,10 +61,6 @@ func (client *GrpcClient) UpdateMetrics(ctx context.Context, metrics []model.Met
 		Metrics: sendMetrics,
 	}.Build()
 
-	md := metadata.Pairs(
-		"x-real-ip", client.localIP,
-	)
-	ctx = metadata.NewOutgoingContext(ctx, md)
 	_, err := client.client.UpdateMetrics(ctx, in)
 
 	return err

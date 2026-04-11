@@ -44,7 +44,7 @@ func (mw *MetricsWriter) Write(ctx context.Context, metrics []model.Metrics) err
 			err := mw.client.UpdateMetrics(ctx, metrics)
 			return err
 		},
-		// mw.getRetryOptions()...,
+		mw.getRetryOptions()...,
 	)
 
 	if err != nil {
@@ -90,7 +90,11 @@ func newMetricsWriter(config MetricsWriterConfig) (*MetricsWriter, error) {
 	var client Client
 
 	if config.Mode == "http" {
-		client, err := http.NewHTTPClient(http.HTTPClientConfig{Address: config.URL, CryptoKey: config.CryptoKey, SigningKey: config.SigningKey})
+		client, err := http.NewHTTPClient(http.HTTPClientConfig{
+			Address:    config.URL,
+			CryptoKey:  config.CryptoKey,
+			SigningKey: config.SigningKey,
+		})
 
 		if err != nil {
 			return nil, err

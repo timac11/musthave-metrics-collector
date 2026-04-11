@@ -44,7 +44,7 @@ func (s *ServerInterceptor) ServerIPInterceptor(ctx context.Context, req any, in
 
 func (s *ServerInterceptor) LoggingInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 	logger.Info("GRPC Request info", info.FullMethod)
-    resp, err := handler(ctx, req)
+	resp, err := handler(ctx, req)
 
 	if err != nil {
 		logger.Error("GRPC Request error", info.FullMethod, err)
@@ -52,9 +52,8 @@ func (s *ServerInterceptor) LoggingInterceptor(ctx context.Context, req any, inf
 		logger.Info("GRPC Request succeeded", info.FullMethod)
 	}
 
-    return resp, err
+	return resp, err
 }
-
 
 func NewServerInterceptor(subnet string) (*ServerInterceptor, error) {
 	if subnet != "" {

@@ -8,7 +8,7 @@ import (
 )
 
 func clientIPInterceptor(localIP string) grpc.UnaryClientInterceptor {
-	return func(ctx context.Context, method string, req, reply interface{},
+	return func(ctx context.Context, method string, req, reply any,
 		cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 
 		md := metadata.Pairs("x-real-ip", localIP)

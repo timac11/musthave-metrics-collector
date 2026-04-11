@@ -89,13 +89,11 @@ func NewHTTPClient(conf HTTPClientConfig) (*HTTPClient, error) {
 	var encoder *encryption.Encoder
 
 	if conf.CryptoKey != "" {
-		newEncoder, err := encryption.NewEncoder(conf.CryptoKey)
+		encoder, err = encryption.NewEncoder(conf.CryptoKey)
 
 		if err != nil {
 			return nil, err
 		}
-
-		encoder = newEncoder
 	}
 
 	return &HTTPClient{client: *client, signingKey: conf.SigningKey, encoder: encoder}, nil
