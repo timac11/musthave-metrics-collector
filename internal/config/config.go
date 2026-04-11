@@ -106,7 +106,7 @@ func assignAgentJSONConfig(config *AgentConfig) *AgentConfig {
 func initAgentFlags() *AgentConfig {
 	agentFlags := AgentConfig{}
 
-	pflag.StringVarP(&agentFlags.Address, "addr", "a", "http://localhost:8080", "Address host:port")
+	pflag.StringVarP(&agentFlags.Address, "addr", "a", "localhost:8080", "Address host:port")
 	pflag.IntVarP(&agentFlags.ReportInterval, "reportInterval", "r", 10, "Wait interval in seconds before sending metrics to server")
 	pflag.IntVarP(&agentFlags.PollInterval, "pollInterval", "p", 2, "Wait interval in seconds before reading system metrics")
 	pflag.UintVar(&agentFlags.RetryAttempts, "retryAttempt", 3, "Count of retry attempts to execute metrics operation")
@@ -195,11 +195,11 @@ func InitServerConfig() *ServerConfig {
 		serverEnv.Config = serverFlags.Config
 	}
 
-	if serverEnv.TrustedSubnet != "" {
+	if serverEnv.TrustedSubnet == "" {
 		serverEnv.TrustedSubnet = serverFlags.TrustedSubnet
 	}
 
-	if serverEnv.Mode != "" {
+	if serverEnv.Mode == "" {
 		serverEnv.Mode = serverFlags.Mode
 	}
 

@@ -17,9 +17,15 @@ type Server struct {
 	service    service.Service
 }
 
-func NewServer(addr string, service service.Service) *Server {
-	server := grpc.NewServer()
-	return &Server{grpcServer: server, addr: addr, service: service}
+func NewServer(addr, subnet string, service service.Service) (*Server, error) {
+	interceptor, err := NewServerInterceptor(subnet)
+
+	if err != nil {
+		return nil, err
+	}
+
+	server := grpc.NewServer(grpc.UnaryInterceptor(interceptor.ServerIPInterceptor))
+	return &Server{grpcServer: server, addr: addr, service: service}, nil
 }
 
 func (s *Server) Start() error {

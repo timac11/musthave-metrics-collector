@@ -1,4 +1,4 @@
-package agent
+package http
 
 import (
 	"strings"
@@ -22,50 +22,12 @@ type HTTPClient struct {
 }
 
 type HTTPClientConfig struct {
-	address    string
-	cryptoKey  string
-	signingKey string
+	Address    string
+	CryptoKey  string
+	SigningKey string
 }
 
-func newHTTPClient(conf HTTPClientConfig) (*HTTPClient, error) {
-	client := resty.New()
-	url := conf.address
-
-	if !strings.HasPrefix(conf.address, "http") {
-		url = "http://" + url
-	}
-
-	client.SetBaseURL(url)
-	client.SetTimeout(time.Duration(10 * time.Second))
-
-	var encoder *encryption.Encoder
-
-	if conf.cryptoKey != "" {
-		newEncoder, err := encryption.NewEncoder(conf.cryptoKey)
-
-		if err != nil {
-			return nil, err
-		}
-
-		encoder = newEncoder
-	}
-
-	return &HTTPClient{client: *client, signingKey: conf.signingKey, encoder: encoder}, nil
-}
-
-func (client *HTTPClient) calculateRequestBody(body any) ([]byte, error) {
-	data, err := json.Marshal(body)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	if client.encoder != nil {
-		return client.encoder.Encode(data)
-	}
-
-	return data, nil
-}
-
+// UpdateMetrics batch update metrics
 func (client *HTTPClient) UpdateMetrics(ctx context.Context, metrics []model.Metrics) error {
 	var err error
 
@@ -85,6 +47,7 @@ func (client *HTTPClient) UpdateMetrics(ctx context.Context, metrics []model.Met
 	return err
 }
 
+// UpdateMetric update single metric
 func (client *HTTPClient) UpdateMetric(ctx context.Context, metric model.Metrics) error {
 	var err error
 
@@ -102,4 +65,52 @@ func (client *HTTPClient) UpdateMetric(ctx context.Context, metric model.Metrics
 
 	_, err = client.client.R().SetBody(body).SetHeader("HashSHA256", signature).Post("/update")
 	return err
+}
+
+// NewHTTPClient constructor
+func NewHTTPClient(conf HTTPClientConfig) (*HTTPClient, error) {
+	client := resty.New()
+	url := conf.Address
+
+	if !strings.HasPrefix(conf.Address, "http") {
+		url = "http://" + url
+	}
+
+	client.SetBaseURL(url)
+	client.SetTimeout(time.Duration(10 * time.Second))
+
+	localIp, err := util.GetOutboundIP(conf.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	client.SetHeader("X-Real-IP", localIp)
+
+	var encoder *encryption.Encoder
+
+	if conf.CryptoKey != "" {
+		newEncoder, err := encryption.NewEncoder(conf.CryptoKey)
+
+		if err != nil {
+			return nil, err
+		}
+
+		encoder = newEncoder
+	}
+
+	return &HTTPClient{client: *client, signingKey: conf.SigningKey, encoder: encoder}, nil
+}
+
+// calculateRequestBody is method to encrypt request body if needed
+func (client *HTTPClient) calculateRequestBody(body any) ([]byte, error) {
+	data, err := json.Marshal(body)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	if client.encoder != nil {
+		return client.encoder.Encode(data)
+	}
+
+	return data, nil
 }

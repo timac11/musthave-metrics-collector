@@ -30,8 +30,9 @@ type Server interface {
 }
 
 func RunApplication() {
-	conf := config.InitServerConfig()
 	logger.Initialize("INFO")
+	conf := config.InitServerConfig()
+	logger.Info("config", conf.Mode)
 
 	auditor := initAppAuditor(conf)
 	appService, err := initAppService(conf)
@@ -52,12 +53,16 @@ func RunApplication() {
 			if err != nil {
 				return err
 			}
-			server := http.NewServer(conf.Address, mux)
+			server = http.NewServer(conf.Address, mux)
 			return server.Start()
 		}
 
 		if conf.Mode == "grpc" {
-			server := grpc.NewServer(conf.Address, *appService)
+			server, err = grpc.NewServer(conf.Address, conf.TrustedSubnet, *appService)
+			if err != nil {
+				return err
+			}
+
 			return server.Start()
 		}
 

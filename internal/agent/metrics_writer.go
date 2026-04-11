@@ -6,6 +6,8 @@ import (
 
 	"github.com/avast/retry-go/v4"
 
+	"github.com/timac11/musthave-metrics-collector/internal/agent/grpc"
+	"github.com/timac11/musthave-metrics-collector/internal/agent/http"
 	"github.com/timac11/musthave-metrics-collector/internal/common/encryption"
 	"github.com/timac11/musthave-metrics-collector/internal/logger"
 	"github.com/timac11/musthave-metrics-collector/internal/model"
@@ -42,7 +44,7 @@ func (mw *MetricsWriter) Write(ctx context.Context, metrics []model.Metrics) err
 			err := mw.client.UpdateMetrics(ctx, metrics)
 			return err
 		},
-		mw.getRetryOptions()...,
+		// mw.getRetryOptions()...,
 	)
 
 	if err != nil {
@@ -88,7 +90,7 @@ func newMetricsWriter(config MetricsWriterConfig) (*MetricsWriter, error) {
 	var client Client
 
 	if config.Mode == "http" {
-		client, err := newHTTPClient(HTTPClientConfig{address: config.URL, cryptoKey: config.CryptoKey, signingKey: config.SigningKey})
+		client, err := http.NewHTTPClient(http.HTTPClientConfig{Address: config.URL, CryptoKey: config.CryptoKey, SigningKey: config.SigningKey})
 
 		if err != nil {
 			return nil, err
@@ -97,7 +99,7 @@ func newMetricsWriter(config MetricsWriterConfig) (*MetricsWriter, error) {
 		return &MetricsWriter{client: client, config: config}, nil
 	}
 
-	client, err := newGrpcClient(GrpcClientConfig{address: config.URL})
+	client, err := grpc.NewGrpcClient(grpc.GrpcClientConfig{Address: config.URL})
 
 	if err != nil {
 		return nil, err

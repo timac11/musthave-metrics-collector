@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,9 +31,14 @@ func TestWrite(t *testing.T) {
 			{ID: "metric1", MType: model.Gauge, Value: &value1},
 			{ID: "metric2", MType: model.Counter, Value: &value2},
 		}
-		defaultConfig := MetricsWriterConfig{URL: testServer.URL, Attempts: 1, AttemptsInterval: 2, Mode: "http"}
 
-		mw, _ := newMetricsWriter(defaultConfig)
+		url := strings.TrimPrefix(testServer.URL, "http://")
+		defaultConfig := MetricsWriterConfig{URL: url, Attempts: 1, AttemptsInterval: 2, Mode: "http"}
+
+		mw, err := newMetricsWriter(defaultConfig)
+
+		require.NoError(t, err)
+
 		mw.Write(ctx, metrics)
 
 		// Verify requests were made
@@ -61,7 +67,9 @@ func TestWriteMetric(t *testing.T) {
 			MType: model.Gauge,
 			Value: &value,
 		}
-		defaultConfig := MetricsWriterConfig{URL: testServer.URL, Attempts: 1, AttemptsInterval: 2, Mode: "http"}
+
+		url := strings.TrimPrefix(testServer.URL, "http://")
+		defaultConfig := MetricsWriterConfig{URL: url, Attempts: 1, AttemptsInterval: 2, Mode: "http"}
 
 		require.NotPanics(t, func() {
 			mw, _ := newMetricsWriter(defaultConfig)
@@ -102,7 +110,8 @@ func TestWriteMetric(t *testing.T) {
 					Value: &tc.value,
 				}
 
-				defaultConfig := MetricsWriterConfig{URL: testServer.URL, Attempts: 1, AttemptsInterval: 2, Mode: "http"}
+				url := strings.TrimPrefix(testServer.URL, "http://")
+				defaultConfig := MetricsWriterConfig{URL: url, Attempts: 1, AttemptsInterval: 2, Mode: "http"}
 				mw, err := newMetricsWriter(defaultConfig)
 
 				require.NoError(t, err)
