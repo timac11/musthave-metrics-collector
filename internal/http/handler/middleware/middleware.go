@@ -15,15 +15,14 @@ type Middleware struct {
 func NewMiddleware(hashingKey, pkPath, trustedSubnet string) (*Middleware, error) {
 	var decoder *encryption.Decoder
 	var subnet *netip.Prefix
+	var err error
 
 	if pkPath != "" {
-		newDecoder, err := encryption.NewDecoder(pkPath)
+		decoder, err = encryption.NewDecoder(pkPath)
 
 		if err != nil {
 			return nil, err
 		}
-
-		decoder = newDecoder
 	}
 
 	if trustedSubnet != "" {
