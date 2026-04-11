@@ -79,12 +79,12 @@ func NewHTTPClient(conf HTTPClientConfig) (*HTTPClient, error) {
 	client.SetBaseURL(url)
 	client.SetTimeout(time.Duration(10 * time.Second))
 
-	localIp, err := util.GetOutboundIP(conf.Address)
+	localIP, err := util.GetOutboundIP(conf.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	client.SetHeader("X-Real-IP", localIp)
+	client.SetHeader("X-Real-IP", localIP)
 
 	var encoder *encryption.Encoder
 

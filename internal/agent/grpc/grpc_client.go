@@ -14,7 +14,7 @@ import (
 
 type GrpcClient struct {
 	client  pb.MetricsClient
-	localIp string
+	localIP string
 }
 
 type GrpcClientConfig struct {
@@ -23,7 +23,7 @@ type GrpcClientConfig struct {
 
 // NewGrpcClient constructor
 func NewGrpcClient(conf GrpcClientConfig) (*GrpcClient, error) {
-	localIp, err := util.GetOutboundIP(conf.Address)
+	localIP, err := util.GetOutboundIP(conf.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func NewGrpcClient(conf GrpcClientConfig) (*GrpcClient, error) {
 	conn, err := grpc.NewClient(
 		conf.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(clientIPInterceptor(localIp)),
+		grpc.WithUnaryInterceptor(clientIPInterceptor(localIP)),
 	)
 
 	if err != nil {
@@ -40,7 +40,7 @@ func NewGrpcClient(conf GrpcClientConfig) (*GrpcClient, error) {
 
 	client := pb.NewMetricsClient(conn)
 
-	return &GrpcClient{client: client, localIp: localIp}, nil
+	return &GrpcClient{client: client, localIP: localIP}, nil
 }
 
 // UpdateMetrics is wrapper on grpc client method of batch update
@@ -57,7 +57,7 @@ func (client *GrpcClient) UpdateMetrics(ctx context.Context, metrics []model.Met
 	}.Build()
 
 	md := metadata.Pairs(
-		"x-real-ip", client.localIp,
+		"x-real-ip", client.localIP,
 	)
 	ctx = metadata.NewOutgoingContext(ctx, md)
 	_, err := client.client.UpdateMetrics(ctx, in)
