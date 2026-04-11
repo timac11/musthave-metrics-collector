@@ -28,12 +28,10 @@ func (s *ServerInterceptor) ServerIPInterceptor(ctx context.Context, req any, in
 		ip, err := netip.ParseAddr(realIP)
 
 		if err != nil {
-			logger.Error("Failed to check client ip", realIP)
 			return nil, status.Error(codes.Unauthenticated, "Client ip is not in trusted subnet")
 		}
 
 		if !s.subnet.Contains(ip) {
-			logger.Error("Client ip is not in trusted subnet", realIP)
 			return nil, status.Error(codes.Unauthenticated, "Client ip is not in trusted subnet")
 		}
 
