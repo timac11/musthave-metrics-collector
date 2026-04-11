@@ -24,7 +24,10 @@ func NewServer(addr, subnet string, service service.Service) (*Server, error) {
 		return nil, err
 	}
 
-	server := grpc.NewServer(grpc.UnaryInterceptor(interceptor.ServerIPInterceptor))
+	server := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(interceptor.LoggingInterceptor, interceptor.ServerIPInterceptor),
+	)
+
 	return &Server{grpcServer: server, addr: addr, service: service}, nil
 }
 

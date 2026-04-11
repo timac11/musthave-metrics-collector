@@ -15,7 +15,7 @@ type ServerInterceptor struct {
 	subnet *netip.Prefix
 }
 
-func (s *ServerInterceptor) ServerIPInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (s *ServerInterceptor) ServerIPInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 	if s.subnet != nil {
 		var realIP string
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
@@ -41,6 +41,20 @@ func (s *ServerInterceptor) ServerIPInterceptor(ctx context.Context, req interfa
 
 	return handler(ctx, req)
 }
+
+func (s *ServerInterceptor) LoggingInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	logger.Info("GRPC Request info", info.FullMethod)
+    resp, err := handler(ctx, req)
+
+	if err != nil {
+		logger.Error("GRPC Request error", info.FullMethod, err)
+	} else {
+		logger.Info("GRPC Request succeeded", info.FullMethod)
+	}
+
+    return resp, err
+}
+
 
 func NewServerInterceptor(subnet string) (*ServerInterceptor, error) {
 	if subnet != "" {
