@@ -48,7 +48,13 @@ func (client *GrpcClient) UpdateMetrics(ctx context.Context, metrics []model.Met
 	var sendMetrics []*pb.Metric
 
 	for _, item := range metrics {
-		metric := pb.Metric_builder{Id: item.ID, Value: *item.Value, Delta: *item.Delta, Type: pb.Metric_MType(*item.Delta)}.Build()
+		var metric *pb.Metric
+		if item.MType == model.Gauge {
+			metric = pb.Metric_builder{Id: item.ID, Value: *item.Value, Type: pb.Metric_GAUGE}.Build()
+		} else {
+			metric = pb.Metric_builder{Id: item.ID, Delta: *item.Delta, Type: pb.Metric_COUNTER}.Build()
+		}
+
 		sendMetrics = append(sendMetrics, metric)
 	}
 

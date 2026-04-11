@@ -114,7 +114,7 @@ func initAgentFlags() *AgentConfig {
 	pflag.UintVarP(&agentFlags.RateLimit, "rateLimit", "l", 1, "Count of workers")
 	pflag.StringVarP(&agentFlags.SigningKey, "signingKey", "k", "", "Signing key")
 	pflag.StringVar(&agentFlags.CryptoKey, "crypto-key", "", "Public key file path")
-	pflag.StringVar(&agentFlags.Mode, "mode", "http", "Transport type: http or grpc")
+	pflag.StringVar(&agentFlags.Mode, "mode", "grpc", "Transport type: http or grpc")
 	pflag.StringVarP(&agentFlags.Config, "config", "c", "", "Path to config json")
 
 	pflag.Parse()
@@ -274,7 +274,7 @@ func initServerFlags() *ServerConfig {
 	pflag.StringVar(&serverFlags.AuditFile, "audit-file", "", "File to store audit logs")
 	pflag.StringVar(&serverFlags.AuditURL, "audit-url", "", "Url to send audit logs")
 	pflag.StringVar(&serverFlags.CryptoKey, "crypto-key", "", "Private key file path")
-	pflag.StringVar(&serverFlags.Mode, "mode", "http", "Transport type: http or grpc")
+	pflag.StringVar(&serverFlags.Mode, "mode", "grpc", "Transport type: http or grpc")
 	pflag.StringVarP(&serverFlags.Config, "config", "c", "", "Path to config json")
 
 	pflag.Parse()
