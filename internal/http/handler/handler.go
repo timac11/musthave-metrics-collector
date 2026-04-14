@@ -4,7 +4,7 @@ import (
 	"html/template"
 
 	"github.com/timac11/musthave-metrics-collector/internal/audit"
-	"github.com/timac11/musthave-metrics-collector/internal/handler/templates"
+	"github.com/timac11/musthave-metrics-collector/internal/http/handler/templates"
 	"github.com/timac11/musthave-metrics-collector/internal/service"
 )
 

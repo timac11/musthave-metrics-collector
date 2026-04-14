@@ -44,7 +44,7 @@ func (m *Middleware) CheckSignatureMiddleware(h http.Handler) http.Handler {
 			return
 		}
 
-		if (r.Method == "POST" || r.Method == "PUT") && m.signingKey != "" {
+		if (r.Method == http.MethodPost || r.Method == http.MethodPut) && m.signingKey != "" {
 			bodyBytes, err := io.ReadAll(r.Body)
 
 			if err != nil {

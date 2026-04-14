@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package metrics;
+
+option go_package = "github.com/timac11/musthave-metrics-collector/internal/proto";
+
+message Metric {
+  string id = 1; // metric name
+
+  // MType metric type.
+  enum MType {
+    GAUGE = 0;
+    COUNTER = 1;
+  }
+
+  MType type = 2; // metric type
+  // metric count value.
+  int64 delta = 3;
+  // metric gauge value.
+  double value = 4;
+}
+
+// UpdateMetricsRequest contains metrics to update.
+message UpdateMetricsRequest {
+  repeated Metric metrics = 1;
+}
+
+// UpdateMetricsResponse is empty response after update.
+message UpdateMetricsResponse {}
+
+// MetricsService determines metrics service.
+service Metrics {
+  // UpdateMetrics updates metrics on server.
+  rpc UpdateMetrics(UpdateMetricsRequest) returns (UpdateMetricsResponse);
+}

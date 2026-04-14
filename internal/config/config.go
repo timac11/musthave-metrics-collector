@@ -17,6 +17,7 @@ type AgentConfig struct {
 	RateLimit      uint   `env:"RATE_LIMIT"`
 	CryptoKey      string `env:"CRYPTO_KEY"`
 	Config         string `env:"CONFIG"`
+	Mode           string `env:"MODE"`
 	RetryAttempts  uint
 	RetryInterval  uint
 }
@@ -60,6 +61,10 @@ func InitAgentConfig() *AgentConfig {
 		agentEnv.Config = agentFlags.Config
 	}
 
+	if agentEnv.Mode == "" {
+		agentEnv.Mode = agentFlags.Mode
+	}
+
 	return assignAgentJSONConfig(agentEnv)
 }
 
@@ -101,7 +106,7 @@ func assignAgentJSONConfig(config *AgentConfig) *AgentConfig {
 func initAgentFlags() *AgentConfig {
 	agentFlags := AgentConfig{}
 
-	pflag.StringVarP(&agentFlags.Address, "addr", "a", "http://localhost:8080", "Address host:port")
+	pflag.StringVarP(&agentFlags.Address, "addr", "a", "localhost:8080", "Address host:port")
 	pflag.IntVarP(&agentFlags.ReportInterval, "reportInterval", "r", 10, "Wait interval in seconds before sending metrics to server")
 	pflag.IntVarP(&agentFlags.PollInterval, "pollInterval", "p", 2, "Wait interval in seconds before reading system metrics")
 	pflag.UintVar(&agentFlags.RetryAttempts, "retryAttempt", 3, "Count of retry attempts to execute metrics operation")
@@ -109,6 +114,7 @@ func initAgentFlags() *AgentConfig {
 	pflag.UintVarP(&agentFlags.RateLimit, "rateLimit", "l", 1, "Count of workers")
 	pflag.StringVarP(&agentFlags.SigningKey, "signingKey", "k", "", "Signing key")
 	pflag.StringVar(&agentFlags.CryptoKey, "crypto-key", "", "Public key file path")
+	pflag.StringVar(&agentFlags.Mode, "mode", "grpc", "Transport type: http or grpc")
 	pflag.StringVarP(&agentFlags.Config, "config", "c", "", "Path to config json")
 
 	pflag.Parse()
@@ -134,6 +140,8 @@ type ServerConfig struct {
 	AuditURL        string `env:"AUDIT_URL"`
 	CryptoKey       string `env:"CRYPTO_KEY"`
 	Config          string `env:"CONFIG"`
+	TrustedSubnet   string `env:"TRUSTED_SUBNET"`
+	Mode            string `env:"MODE"`
 	RetryAttempts   uint
 	RetryInterval   uint
 }
@@ -144,6 +152,7 @@ type serverJSONConfig struct {
 	FileStoragePath string `json:"store_file"`
 	DatabaseDsn     string `json:"database_dsn"`
 	CryptoKey       string `json:"crypto_key"`
+	TrustedSubnet   string `json:"trusted_subnet"`
 }
 
 func InitServerConfig() *ServerConfig {
@@ -186,6 +195,14 @@ func InitServerConfig() *ServerConfig {
 		serverEnv.Config = serverFlags.Config
 	}
 
+	if serverEnv.TrustedSubnet == "" {
+		serverEnv.TrustedSubnet = serverFlags.TrustedSubnet
+	}
+
+	if serverEnv.Mode == "" {
+		serverEnv.Mode = serverFlags.Mode
+	}
+
 	serverEnv.RetryAttempts = serverFlags.RetryAttempts
 	serverEnv.RetryInterval = serverFlags.RetryInterval
 
@@ -222,6 +239,10 @@ func assignServerJSONConfig(config *ServerConfig) *ServerConfig {
 					if config.CryptoKey == "" {
 						config.CryptoKey = jsonConfig.CryptoKey
 					}
+
+					if config.TrustedSubnet == "" {
+						config.TrustedSubnet = jsonConfig.TrustedSubnet
+					}
 				}
 
 			}
@@ -249,9 +270,11 @@ func initServerFlags() *ServerConfig {
 	pflag.UintVar(&serverFlags.RetryAttempts, "retry-attempt", 3, "Count of retry attempts to execute metrics operation")
 	pflag.UintVar(&serverFlags.RetryInterval, "retry-interval", 2, "Interval in seconds between metric operation attempts")
 	pflag.StringVarP(&serverFlags.SigningKey, "signing-key", "k", "", "Signing key")
+	pflag.StringVarP(&serverFlags.TrustedSubnet, "trusted-subnet", "t", "", "Trusted subnet")
 	pflag.StringVar(&serverFlags.AuditFile, "audit-file", "", "File to store audit logs")
 	pflag.StringVar(&serverFlags.AuditURL, "audit-url", "", "Url to send audit logs")
 	pflag.StringVar(&serverFlags.CryptoKey, "crypto-key", "", "Private key file path")
+	pflag.StringVar(&serverFlags.Mode, "mode", "grpc", "Transport type: http or grpc")
 	pflag.StringVarP(&serverFlags.Config, "config", "c", "", "Path to config json")
 
 	pflag.Parse()

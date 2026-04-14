@@ -10,15 +10,12 @@ import (
 
 	"github.com/timac11/musthave-metrics-collector/internal/audit"
 	"github.com/timac11/musthave-metrics-collector/internal/config"
-	"github.com/timac11/musthave-metrics-collector/internal/handler"
-	"github.com/timac11/musthave-metrics-collector/internal/handler/middleware"
-	persistentstorage "github.com/timac11/musthave-metrics-collector/internal/persistent-storage"
-	dbstorage "github.com/timac11/musthave-metrics-collector/internal/repository/db"
-	memorystorage "github.com/timac11/musthave-metrics-collector/internal/repository/memory"
+	"github.com/timac11/musthave-metrics-collector/internal/http/handler"
+	"github.com/timac11/musthave-metrics-collector/internal/http/handler/middleware"
 	"github.com/timac11/musthave-metrics-collector/internal/service"
 
 	httpSwagger "github.com/swaggo/http-swagger/v2"
-	_ "github.com/timac11/musthave-metrics-collector/internal/handler/docs"
+	_ "github.com/timac11/musthave-metrics-collector/internal/http/handler/docs"
 )
 
 // @title Metrics collector server API
@@ -32,35 +29,14 @@ import (
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @BasePath /
-func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
-	// init service instance
-	var serviceInstance *service.Service
-	serviceConfig := service.ServiceConfig{Attempts: serverConfig.RetryAttempts, AttemptsInterval: serverConfig.RetryInterval}
-
-	if serverConfig.DatabaseDsn != "" {
-		dbClient, err := dbstorage.NewPgClient(serverConfig.DatabaseDsn)
-
-		if err != nil {
-			return nil, err
-		}
-
-		serviceInstance = service.NewService(dbClient, serviceConfig)
-	} else {
-		persistentStorage := persistentstorage.NewPersistentStorage(serverConfig.FileStoragePath)
-		memStorage := memorystorage.NewMemStorage(persistentStorage, serverConfig.Restore)
-		serviceInstance = service.NewService(memStorage, serviceConfig)
-	}
-
-	// init auditors instance
-	auditor := audit.NewAuditor(serverConfig.AuditFile, serverConfig.AuditURL)
+func InitRouter(serverConfig *config.ServerConfig, serviceInstance *service.Service, auditor *audit.Auditor) (*chi.Mux, error) {
 	handlers := handler.NewApplicationAPIContainer(*serviceInstance, *auditor)
 	router := chi.NewRouter()
-
 	router.Route("/debug", func(router chi.Router) {
 		router.Mount("/", chimiddleware.Profiler())
 	})
 
-	m, err := middleware.NewMiddleware(serverConfig.SigningKey, serverConfig.CryptoKey)
+	m, err := middleware.NewMiddleware(serverConfig.SigningKey, serverConfig.CryptoKey, serverConfig.TrustedSubnet)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +46,7 @@ func InitRouter(serverConfig *config.ServerConfig) (*chi.Mux, error) {
 		middlewares := []func(http.Handler) http.Handler{
 			m.GzipMiddleware,
 			m.RequestLoggerMiddleware,
+			m.CheckSubnetMiddleware,
 		}
 		router.Use(middlewares...)
 
